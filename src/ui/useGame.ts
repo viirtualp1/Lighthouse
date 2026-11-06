@@ -1,0 +1,271 @@
+import { reactive, ref, shallowRef, triggerRef } from 'vue';
+import { playEffects, updateAmbience } from '@/audio/sound';
+import { GAME } from '@/game/config';
+import { computeLight } from '@/game/light';
+import * as sim from '@/game/sim';
+import { createState } from '@/game/state';
+import type { BeamMode, BuildingId } from '@/game/config';
+import type { Point } from '@/game/map';
+import type { Effect, Message } from '@/game/state';
+import type { ViewState } from '@/render/GameRenderer';
+
+export interface Banner {
+  id: number;
+  title: Message;
+  subtitle: Message;
+}
+
+const UI_REFRESH_SECONDS = 0.1;
+const BEAM_STEP = Math.PI / 18;
+const SHADOW_NEAR = 0.7;
+
+const state = shallowRef(createState());
+const view = reactive<ViewState>({ hoverSlot: null, pointer: null, selectedId: null, placing: null, aiming: false, highlight: null });
+const screenPointer = ref<Point | null>(null);
+const banner = ref<Banner | null>(null);
+const menuOpen = ref(false);
+const restartListeners: (() => void)[] = [];
+let sinceRefresh = 0;
+let bannerId = 0;
+let speedBeforeMenu = 1;
+
+function refresh () {
+  sinceRefresh = 0;
+  triggerRef(state);
+}
+
+function show (title: Message, subtitle: Message) {
+  banner.value = { id: ++bannerId, title, subtitle };
+}
+
+function showBanner (effects: Effect[]) {
+  const s = state.value;
+
+  for (const effect of effects) {
+    if (effect.kind === 'dusk') {
+      show({ key: 'banner.duskTitle', params: {} }, { key: 'banner.duskText', params: { day: s.day, h: sim.nightHours(s) } });
+    } else if (effect.kind === 'night') {
+      show({ key: 'banner.nightTitle', params: { day: s.day } }, { key: 'banner.nightText', params: {} });
+    } else if (effect.kind === 'oilOut') {
+      show({ key: 'banner.oilOutTitle', params: {} }, { key: 'banner.oilOutText', params: {} });
+    }
+  }
+}
+
+/** How much of the town the Shadow is pressing on, for the whispering in the soundscape. */
+function dread () {
+  const s = state.value;
+  const near = s.buildings.filter(b => sim.shadowAt(s, b.slot) >= SHADOW_NEAR).length;
+
+  return Math.min(1, near / 4 + (s.resources.oil <= 0 ? 0.5 : 0));
+}
+
+function frame (seconds: number) {
+  const s = state.value;
+
+  if (s.speed > 0 && s.status === 'playing' && !s.dawnReport) {
+    sim.advance(s, (seconds / GAME.secondsPerHour) * s.speed);
+  }
+
+  const effects = s.effects.splice(0);
+
+  if (effects.length) {
+    playEffects(effects);
+    showBanner(effects);
+  }
+
+  updateAmbience(sim.nightness(s), dread());
+  sinceRefresh += seconds;
+
+  if (sinceRefresh >= UI_REFRESH_SECONDS || effects.length) {
+    refresh();
+  }
+
+  return effects;
+}
+
+function hover (slot: number | null, point: Point | null, screen: Point | null) {
+  view.hoverSlot = slot;
+  view.pointer = point;
+  screenPointer.value = screen;
+}
+
+function press (slot: number | null, point: Point) {
+  const s = state.value;
+
+  if (view.aiming) {
+    const { x, y } = s.map.lighthouse;
+    sim.setBeamAngle(s, Math.atan2(point.y - y, point.x - x));
+    view.aiming = false;
+    refresh();
+
+    return;
+  }
+
+  if (view.placing) {
+    const built = slot === null ? null : sim.build(s, view.placing, slot);
+
+    if (built) {
+      view.selectedId = built.id;
+
+      if (!sim.canAfford(s, view.placing)) {
+        view.placing = null;
+      }
+    }
+
+    refresh();
+
+    return;
+  }
+
+  view.selectedId = slot === null ? null : s.buildings.find(b => b.slot === slot)?.id ?? null;
+}
+
+function cancel () {
+  view.placing = null;
+  view.aiming = false;
+}
+
+function select (id: number | null) {
+  view.placing = null;
+  view.aiming = false;
+  view.selectedId = id;
+}
+
+function startPlacing (type: BuildingId) {
+  view.aiming = false;
+  view.selectedId = null;
+  view.placing = view.placing === type ? null : type;
+}
+
+function startAiming () {
+  view.placing = null;
+  view.aiming = !view.aiming;
+
+  if (state.value.mode !== 'beam') {
+    sim.setMode(state.value, 'beam');
+    refresh();
+  }
+}
+
+function rotateBeam (direction: number) {
+  sim.setBeamAngle(state.value, state.value.beamAngle + direction * BEAM_STEP);
+  refresh();
+}
+
+function setMode (mode: BeamMode) {
+  sim.setMode(state.value, mode);
+  refresh();
+}
+
+function setWorkers (id: number, workers: number) {
+  sim.setWorkers(state.value, id, workers);
+  refresh();
+}
+
+function demolish (id: number) {
+  sim.demolish(state.value, id);
+  view.selectedId = null;
+  refresh();
+}
+
+function buyLens () {
+  sim.buyLens(state.value);
+  refresh();
+}
+
+function setSpeed (speed: number) {
+  state.value.speed = speed;
+  refresh();
+}
+
+function togglePause () {
+  setSpeed(state.value.speed === 0 ? 1 : 0);
+}
+
+function closeDawnReport () {
+  const s = state.value;
+  sim.closeDawnReport(s);
+  show({ key: 'banner.dayTitle', params: { day: Math.min(s.day, GAME.daysToWin) } }, { key: 'banner.dayText', params: { n: GAME.daysToWin - s.day + 1 } });
+  refresh();
+}
+
+function openMenu () {
+  if (menuOpen.value) {
+    return;
+  }
+
+  speedBeforeMenu = state.value.speed;
+  menuOpen.value = true;
+  cancel();
+  setSpeed(0);
+}
+
+function closeMenu () {
+  if (!menuOpen.value) {
+    return;
+  }
+
+  menuOpen.value = false;
+  setSpeed(speedBeforeMenu);
+}
+
+/** Esc backs out one level at a time: a placement or aim first, then a selection, and only then the menu. */
+function escape () {
+  if (menuOpen.value) {
+    closeMenu();
+  } else if (view.placing || view.aiming) {
+    cancel();
+  } else if (view.selectedId !== null) {
+    view.selectedId = null;
+  } else {
+    openMenu();
+  }
+}
+
+function restart () {
+  state.value = createState();
+  computeLight(state.value);
+  menuOpen.value = false;
+  view.selectedId = null;
+  banner.value = null;
+  cancel();
+  restartListeners.forEach(listener => listener());
+}
+
+function onRestart (listener: () => void) {
+  restartListeners.push(listener);
+}
+
+export function useGame () {
+  return {
+    state,
+    view,
+    screenPointer,
+    banner,
+    menuOpen,
+    openMenu,
+    closeMenu,
+    escape,
+    frame,
+    hover,
+    press,
+    cancel,
+    select,
+    startPlacing,
+    startAiming,
+    rotateBeam,
+    setMode,
+    setWorkers,
+    demolish,
+    buyLens,
+    setSpeed,
+    togglePause,
+    closeDawnReport,
+    restart,
+    onRestart,
+    refresh
+  };
+}
+
+computeLight(state.value);
