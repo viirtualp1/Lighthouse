@@ -36,14 +36,15 @@ function toggle (next: Exclude<Panel, null>) {
 </script>
 
 <template>
-  <div class="pointer-events-auto absolute inset-0 z-30 flex items-center bg-[linear-gradient(90deg,rgba(0,0,0,0.88)_0%,rgba(0,0,0,0.55)_38%,rgba(0,0,0,0)_70%)]">
-    <div class="ml-[8vw] flex flex-col">
+  <div class="pointer-events-auto absolute inset-0 z-30 bg-[linear-gradient(90deg,rgba(0,0,0,0.88)_0%,rgba(0,0,0,0.55)_38%,rgba(0,0,0,0)_70%)]">
+    <!-- Pinned to a fixed spot: nothing here depends on what is open, so the menu never shifts. -->
+    <div class="absolute top-[28vh] left-[8vw]">
       <h1 class="display text-8xl leading-none whitespace-nowrap text-snow drop-shadow-[0_6px_30px_rgba(0,0,0,0.8)]">
         {{ t('mainMenu.title') }}
       </h1>
 
-      <div class="mt-12 flex items-start gap-10">
-        <nav class="flex w-72 shrink-0 flex-col items-start gap-1">
+      <div class="relative mt-12 w-72">
+        <nav class="flex flex-col items-start gap-1">
           <button
             v-if="canContinue"
             class="menu-item"
@@ -53,7 +54,7 @@ function toggle (next: Exclude<Panel, null>) {
           </button>
           <button
             class="menu-item"
-            :class="{ 'text-danger!': confirmNew }"
+            :class="{ danger: confirmNew }"
             @click="newGame"
           >
             {{ confirmNew ? t('mainMenu.confirmNew') : t('mainMenu.newGame') }}
@@ -81,17 +82,17 @@ function toggle (next: Exclude<Panel, null>) {
           </button>
         </nav>
 
+        <!-- Floats beside the list, out of the layout flow, so opening or switching it moves nothing else. -->
         <Transition
-          enter-from-class="opacity-0 -translate-x-3"
-          enter-active-class="transition duration-200"
+          enter-from-class="opacity-0"
+          enter-active-class="transition-opacity duration-150"
           leave-to-class="opacity-0"
-          leave-active-class="transition duration-150"
-          mode="out-in"
+          leave-active-class="transition-opacity duration-100"
         >
           <section
             v-if="panel"
             :key="panel"
-            class="plate w-[360px] px-6 py-5"
+            class="plate absolute top-0 left-full ml-10 w-[360px] px-6 py-5"
           >
             <h2 class="display mb-4 text-3xl leading-none">
               {{ panel === 'settings' ? t('mainMenu.settings') : t('mainMenu.controls') }}
@@ -102,54 +103,50 @@ function toggle (next: Exclude<Panel, null>) {
         </Transition>
       </div>
     </div>
-
-    <span class="label absolute bottom-6 left-[8vw] text-fog">{{ t('mainMenu.footer') }}</span>
   </div>
 </template>
 
 <style scoped>
 .menu-item {
   position: relative;
-  padding: 6px 0 6px 22px;
+  padding: 6px 0 6px 24px;
   font-family: var(--font-hud);
   font-size: 22px;
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgb(242 244 245 / 0.62);
+  color: rgb(242 244 245 / 0.6);
   white-space: nowrap;
   cursor: pointer;
-  transition:
-    color 0.15s,
-    padding-left 0.2s;
+  transition: color 0.12s;
 }
 
-/* A short warm bar, like the lamp's own light, marks the item under the pointer. */
+/* A short warm bar, like the lamp's own light, marks the item under the pointer. Its space is always reserved, so
+   it only fades in: the text never moves. */
 .menu-item::before {
   content: '';
   position: absolute;
   top: 50%;
   left: 0;
-  width: 10px;
+  width: 12px;
   height: 2px;
+  margin-top: -1px;
   background: var(--color-warm);
   opacity: 0;
-  transform: translateY(-50%) scaleX(0);
-  transform-origin: left;
-  transition:
-    opacity 0.15s,
-    transform 0.2s;
+  transition: opacity 0.12s;
 }
 
 .menu-item:hover,
 .menu-item.active {
   color: var(--color-snow);
-  padding-left: 28px;
 }
 
 .menu-item:hover::before,
 .menu-item.active::before {
   opacity: 1;
-  transform: translateY(-50%) scaleX(1);
+}
+
+.menu-item.danger {
+  color: var(--color-danger);
 }
 </style>

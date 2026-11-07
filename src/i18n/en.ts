@@ -217,8 +217,7 @@ export default {
     quit: 'Quit',
     confirmNew: 'Sure? Click again',
     settings: 'Settings',
-    controls: 'Controls',
-    footer: 'Prototype'
+    controls: 'Controls'
   },
   menu: {
     mainMenu: 'Main menu',

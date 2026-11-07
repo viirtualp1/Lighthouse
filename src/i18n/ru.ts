@@ -219,8 +219,7 @@ const ru: typeof en = {
     quit: 'Выйти',
     confirmNew: 'Точно? Ещё раз',
     settings: 'Настройки',
-    controls: 'Управление',
-    footer: 'Прототип'
+    controls: 'Управление'
   },
   menu: {
     mainMenu: 'Главное меню',
