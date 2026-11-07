@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import { Crosshair, RotateCcw, RotateCw, User } from '@lucide/vue';
 import { BEAM_MODES, GAME } from '@/game/config';
-import { lighthouseReach, oilPerHour } from '@/game/light';
+import { lighthouseReach } from '@/game/light';
 import { forecast } from '@/game/sim';
 import { useI18n } from 'vue-i18n';
 import ResourceIcon from './ResourceIcon.vue';
@@ -10,7 +10,6 @@ import { useGame } from './useGame';
 import type { BeamMode } from '@/game/config';
 
 const MODES = Object.entries(BEAM_MODES) as [BeamMode, (typeof BEAM_MODES)[BeamMode]][];
-const LONGEST_NIGHT = 20;
 
 const game = useGame();
 const { t } = useI18n();
@@ -19,22 +18,29 @@ const s = game.state;
 
 const keepers = computed(() => s.value.buildings.find(b => b.type === 'lighthouse')!);
 
-const nights = computed(() => forecast(s.value, 5));
+/**
+ * How many of the coming nights the oil in store will carry the Lighthouse through, one segment per night, the
+ * first segment being tonight. A part-filled segment is a night the oil runs out in.
+ */
+const supply = computed(() => {
+  let left = s.value.resources.oil;
+
+  const nights = forecast(s.value, 5).map(n => {
+    const share = Math.max(0, Math.min(1, left / Math.max(1, n.oil)));
+    left -= n.oil;
+
+    return { ...n, share };
+  });
+
+  return { nights, covered: nights.filter(n => n.share >= 1).length };
+});
 </script>
 
 <template>
   <section class="plate pointer-events-auto absolute bottom-4 left-4 flex w-80 flex-col gap-3 p-4">
-    <header class="flex items-center justify-between">
-      <h2 class="display text-3xl leading-none">
-        {{ t('lighthouse.title') }}
-      </h2>
-      <span
-        class="num flex items-center gap-1 text-[15px] text-warm"
-        :title="t('lighthouse.oilPerHour')"
-      >
-        <ResourceIcon id="oil" />{{ oilPerHour(s).toFixed(1) }}{{ t('supplies.perHour') }}
-      </span>
-    </header>
+    <h2 class="display text-3xl leading-none">
+      {{ t('lighthouse.title') }}
+    </h2>
 
     <div
       class="grid grid-cols-4 gap-1"
@@ -79,30 +85,31 @@ const nights = computed(() => forecast(s.value, 5));
       </button>
     </div>
 
-    <ol
-      class="flex h-14 items-end gap-1.5"
-      data-tour="forecast"
-    >
-      <li
-        v-for="n in nights"
-        :key="n.day"
-        class="flex flex-1 flex-col items-center gap-1"
-        :title="t('lighthouse.forecast', { day: n.day, h: n.hours, oil: n.oil })"
+    <div data-tour="forecast">
+      <p
+        class="flex items-center gap-1.5 text-[14px]"
+        :class="supply.covered === 0 ? 'text-danger' : 'text-snow'"
       >
-        <span
-          class="num flex items-center gap-0.5 text-[11px]"
-          :class="n.oil > s.resources.oil ? 'text-danger' : 'text-warm'"
-        ><ResourceIcon
-          id="oil"
-          :size="10"
-        />{{ n.oil }}</span>
-        <div
-          class="w-full rounded-[1px] border border-snow/25"
-          :class="n.day === s.day ? 'bg-snow/80' : 'bg-snow/10'"
-          :style="{ height: `${(n.hours / LONGEST_NIGHT) * 30 + 4}px` }"
-        />
-      </li>
-    </ol>
+        <ResourceIcon id="oil" />
+        {{ supply.covered === supply.nights.length
+          ? t('lighthouse.lasts', { n: `${supply.covered}+` }, supply.covered)
+          : t('lighthouse.lasts', { n: supply.covered }, supply.covered) }}
+      </p>
+      <ol class="mt-2 flex gap-1">
+        <li
+          v-for="n in supply.nights"
+          :key="n.day"
+          class="relative h-2 flex-1 overflow-hidden rounded-[1px] border"
+          :class="n.share > 0 ? 'border-warm/50' : 'border-danger/60'"
+          :title="t('lighthouse.forecast', { day: n.day, h: n.hours, oil: n.oil })"
+        >
+          <div
+            class="h-full bg-warm"
+            :style="{ width: `${n.share * 100}%` }"
+          />
+        </li>
+      </ol>
+    </div>
 
     <div class="flex items-center justify-between gap-3 border-t border-snow/10 pt-3">
       <div

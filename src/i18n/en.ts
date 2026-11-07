@@ -53,7 +53,7 @@ export default {
     aim: 'Aim',
     rotateLeft: 'Rotate left · Q',
     rotateRight: 'Rotate right · E',
-    nightsAhead: 'Nights ahead · oil needed',
+    lasts: 'Not enough oil for tonight | Oil lasts {n} night | Oil lasts {n} nights',
     forecast: 'Day {day}: {h}h night, needs {oil} oil',
     keepers: 'Keepers',
     reachFull: 'Light at full strength',
@@ -272,7 +272,7 @@ export default {
       },
       forecast: {
         title: 'Forecast',
-        text: 'The bars are the coming nights. The number above each is how much oil the Lighthouse will burn. A red number means you won’t have enough.'
+        text: 'This strip shows how many of the coming nights your oil will carry the Lighthouse through — one segment per night, starting with tonight. An empty red segment is a night without light.'
       },
       modes: {
         title: 'Light modes',

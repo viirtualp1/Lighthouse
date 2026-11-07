@@ -15,8 +15,29 @@ export const i18n = createI18n({
   legacy: false,
   locale: readLocale(),
   fallbackLocale: 'en',
-  messages: { en, ru }
+  messages: { en, ru },
+  pluralRules: { ru: russianPlural }
 });
+
+/** Russian has three plural forms (1 ночь, 2 ночи, 5 ночей); the first message form is kept for zero. */
+function russianPlural (choice: number) {
+  if (choice === 0) {
+    return 0;
+  }
+
+  const tens = choice % 100;
+  const ones = choice % 10;
+
+  if (tens > 10 && tens < 20) {
+    return 3;
+  }
+
+  if (ones === 1) {
+    return 1;
+  }
+
+  return ones >= 2 && ones <= 4 ? 2 : 3;
+}
 
 function readLocale (): Locale {
   try {
