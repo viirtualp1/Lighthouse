@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { Crosshair, RotateCcw, RotateCw, User } from '@lucide/vue';
+import { CircleArrowUp, Crosshair, RotateCcw, RotateCw, User } from '@lucide/vue';
 import { BEAM_MODES, GAME } from '@/game/config';
 import { lighthouseReach } from '@/game/light';
 import { forecast } from '@/game/sim';
@@ -133,27 +133,41 @@ const supply = computed(() => {
           class="ml-1 text-[12px] whitespace-nowrap text-danger"
         >{{ t('lighthouse.reachShort') }}</span>
       </div>
-      <button
+      <div
         v-if="!s.lens"
-        class="hud-btn h-auto flex-col items-start gap-0 px-3 py-1.5 text-left whitespace-nowrap normal-case tracking-normal"
-        :class="{ 'opacity-60': s.resources.iron < GAME.lensIron }"
+        class="relative"
         @mouseenter="game.view.previewLens = true"
         @mouseleave="game.view.previewLens = false"
-        @click="s.resources.iron >= GAME.lensIron && game.buyLens()"
       >
-        <span class="flex items-center gap-1.5 text-[13px] font-medium uppercase tracking-[0.08em]">
-          {{ t('lighthouse.lensName') }}
-          <span
-            class="num flex items-center gap-0.5 normal-case"
-            :class="s.resources.iron < GAME.lensIron ? 'text-danger' : 'text-snow'"
-          ><ResourceIcon id="iron" />{{ GAME.lensIron }}</span>
-        </span>
-        <span class="text-[11px] text-mist">{{ t('lighthouse.lensGain') }}</span>
-        <span
-          v-if="s.resources.iron < GAME.lensIron"
-          class="text-[11px] text-danger"
-        >{{ t('lighthouse.lensWhere') }}</span>
-      </button>
+        <div
+          v-if="game.view.previewLens"
+          class="plate absolute right-0 bottom-full mb-2 w-64 px-4 py-3 whitespace-nowrap"
+        >
+          <div class="flex items-center justify-between">
+            <span class="display text-2xl leading-none">{{ t('lighthouse.lensName') }}</span>
+            <span
+              class="num flex items-center gap-1 text-[14px]"
+              :class="s.resources.iron < GAME.lensIron ? 'text-danger' : 'text-snow'"
+            ><ResourceIcon id="iron" />{{ GAME.lensIron }}</span>
+          </div>
+          <p class="mt-1.5 text-[13px] text-snow/90">
+            {{ t('lighthouse.lensGain') }}
+          </p>
+          <p
+            v-if="s.resources.iron < GAME.lensIron"
+            class="mt-1 text-[12px] text-danger"
+          >
+            {{ t('lighthouse.lensWhere') }}
+          </p>
+        </div>
+        <button
+          class="hud-btn h-8 px-3 whitespace-nowrap"
+          :class="{ 'opacity-60': s.resources.iron < GAME.lensIron }"
+          @click="s.resources.iron >= GAME.lensIron && game.buyLens()"
+        >
+          <CircleArrowUp :size="14" />{{ t('lighthouse.upgrade') }}
+        </button>
+      </div>
     </div>
   </section>
 </template>
