@@ -147,7 +147,7 @@ function dmgSvg () {
   <path d="M0 ${height - 36} Q ${width * 0.3} ${height - 54} ${width / 2} ${height - 42} T ${width} ${height - 40}" fill="none" stroke="${SNOW}" stroke-opacity="0.12" stroke-width="1" stroke-dasharray="40 18"/>
   <ellipse cx="${foot.x + 4}" cy="${foot.y + 4}" rx="${40 * scale}" ry="${10 * scale}" fill="#000" opacity="0.5"/>
   <g transform="translate(${foot.x} ${foot.y - 16 * scale}) scale(${scale})">${lighthouse(1.3)}</g>
-  ${[APP_SLOT, APPLICATIONS_SLOT].map(labelPlate).join('')}
+  ${mist()}
   <g fill="none" stroke="${WARM}" stroke-opacity="0.55" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <path d="M${APPLICATIONS_SLOT.x - 92} ${APPLICATIONS_SLOT.y + 64} l8 -8 -8 -8"/>
     <path d="M${APPLICATIONS_SLOT.x - 80} ${APPLICATIONS_SLOT.y + 64} l8 -8 -8 -8" stroke-opacity="0.3"/>
@@ -156,13 +156,25 @@ function dmgSvg () {
 }
 
 /**
- * Finder draws icon labels in the system's text colour, black in light mode and white in dark mode, and a DMG cannot
- * change it. A mid-grey plate under each label keeps either colour readable on the night background.
+ * Finder draws icon labels in its own colour, black on this background, and a DMG cannot change it. A low band of
+ * pale mist drifts behind the labels so the text reads, and it looks like fog off the sea rather than a sticker.
  */
-function labelPlate (slot: { x: number; y: number }) {
-  const y = slot.y + LABEL_OFFSET;
+function mist () {
+  const y = APP_SLOT.y + LABEL_OFFSET;
+  const puffs = [
+    { x: 40, rx: 120, ry: 22, o: 0.45 },
+    { x: APP_SLOT.x, rx: 120, ry: 26, o: 0.9 },
+    { x: 260, rx: 110, ry: 18, o: 0.4 },
+    { x: 400, rx: 110, ry: 18, o: 0.4 },
+    { x: APPLICATIONS_SLOT.x, rx: 120, ry: 26, o: 0.9 },
+    { x: 630, rx: 120, ry: 22, o: 0.45 }
+  ];
 
-  return `<rect x="${slot.x - 70}" y="${y - 12}" width="140" height="24" rx="5" fill="#808991" fill-opacity="0.92" stroke="${SNOW}" stroke-opacity="0.25"/>`;
+  return `
+    <filter id="haze" x="-20%" y="-200%" width="140%" height="500%"><feGaussianBlur stdDeviation="12"/></filter>
+    <g filter="url(#haze)" fill="#a7b0b8">
+      ${puffs.map(p => `<ellipse cx="${p.x}" cy="${y}" rx="${p.rx}" ry="${p.ry}" opacity="${p.o}"/>`).join('')}
+    </g>`;
 }
 
 function png (svg: string, width: number) {
