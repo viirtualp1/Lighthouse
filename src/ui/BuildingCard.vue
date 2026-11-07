@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { Minus, Plus, Trash, X } from '@lucide/vue';
+import { Minus, Plus, Trash, User, X } from '@lucide/vue';
 import { BUILDINGS } from '@/game/config';
 import { LIT, tonightRisk } from '@/game/light';
-import { assignedWorkers, workFactor } from '@/game/sim';
+import { assignedWorkers, efficiency, workFactor } from '@/game/sim';
 import { useI18n } from 'vue-i18n';
+import ResourceIcon from './ResourceIcon.vue';
 import { useGame } from './useGame';
+import type { ResourceId } from '@/game/config';
 
 const game = useGame();
 const { t } = useI18n();
@@ -35,11 +37,41 @@ const card = computed(() => {
     status = { text: t('card.dim'), tone: 'text-warm' };
   }
 
+  const eff = efficiency(s, building);
+  const work = building.workers * eff.total;
+  const outputs: { id: ResourceId; amount: number }[] = [];
+  let note: string | null = null;
+
+  if (building.type === 'dock') {
+    outputs.push({ id: 'fish', amount: work });
+  } else if (building.type === 'driftwood') {
+    outputs.push({ id: 'wood', amount: work });
+  } else if (building.type === 'oilCollector') {
+    outputs.push({ id: 'oil', amount: work * 0.5 });
+  } else if (building.type === 'renderer') {
+    outputs.push({ id: 'oil', amount: work }, { id: 'fish', amount: -work * 2 });
+  } else if (building.type === 'salvage') {
+    outputs.push({ id: 'iron', amount: (wreck ?? 0) > 0 ? work * 0.5 : 0 });
+  } else if (building.type === 'hut') {
+    note = t('card.houses', { n: def.housing ?? 0 });
+  } else if (building.type === 'infirmary') {
+    note = t('card.healing', { n: s.sick });
+  } else if (building.type === 'chapel') {
+    note = building.workers ? t('card.calming') : t('card.calmingIdle');
+  }
+
+  if (def.maxWorkers && building.workers === 0 && building.type !== 'chapel') {
+    note = t('card.nothing');
+  }
+
   return {
     building,
     def,
     status,
     wreck,
+    outputs: building.workers ? outputs : [],
+    note,
+    eff: { total: Math.round(eff.total * 100), light: Math.round(eff.light * 100), fear: Math.round((1 - eff.fear) * 100) },
     free: s.healthy - assignedWorkers(s),
     slots: Array.from({ length: def.maxWorkers }, (_, i) => i < building.workers)
   };
@@ -47,6 +79,22 @@ const card = computed(() => {
 
 function close () {
   game.view.selectedId = null;
+}
+
+/** Clicking a worker figure fills up to it; clicking the last filled one empties it. */
+function setTo (index: number) {
+  const current = card.value;
+
+  if (!current) {
+    return;
+  }
+
+  const target = current.building.workers === index + 1 ? index : index + 1;
+  game.setWorkers(current.building.id, target);
+}
+
+function formatAmount (amount: number) {
+  return `${amount >= 0 ? '+' : '−'}${Math.abs(amount).toFixed(1)}`;
 }
 </script>
 
@@ -89,13 +137,19 @@ function close () {
         >
           <Minus :size="13" />
         </button>
-        <div class="flex flex-1 gap-1">
-          <span
+        <div class="flex flex-1 justify-center gap-0.5">
+          <button
             v-for="(filled, i) in card.slots"
             :key="i"
-            class="h-8 flex-1 border"
-            :class="filled ? 'border-snow bg-snow' : 'border-snow/20 bg-snow/5'"
-          />
+            class="grid h-8 w-8 cursor-pointer place-items-center rounded-[2px] transition-colors hover:bg-snow/10"
+            @click="setTo(i)"
+          >
+            <User
+              :size="20"
+              :stroke-width="1.6"
+              :class="filled ? 'fill-snow text-snow' : 'text-snow/30'"
+            />
+          </button>
         </div>
         <button
           class="hud-btn h-8 w-8"
@@ -104,6 +158,43 @@ function close () {
           <Plus :size="13" />
         </button>
       </div>
+    </div>
+
+    <div
+      v-if="card.outputs.length"
+      class="mt-4 flex items-center justify-between border-t border-snow/10 pt-3"
+    >
+      <span class="label">{{ t('card.output') }}</span>
+      <span class="flex items-center gap-3">
+        <span
+          v-for="o in card.outputs"
+          :key="o.id"
+          class="num flex items-center gap-1 text-[15px]"
+          :class="o.amount < 0 ? 'text-danger' : 'text-snow'"
+        >
+          <ResourceIcon
+            :id="o.id"
+            :size="15"
+          />{{ formatAmount(o.amount) }}{{ t('supplies.perHour') }}
+        </span>
+      </span>
+    </div>
+    <p
+      v-if="card.note"
+      class="mt-3 text-[13px] text-mist"
+    >
+      {{ card.note }}
+    </p>
+
+    <div
+      v-if="card.def.maxWorkers && card.building.workers"
+      class="mt-2 flex items-center justify-between text-[12px]"
+    >
+      <span class="label">{{ t('card.efficiency') }}</span>
+      <span class="num text-mist">
+        <span :class="card.eff.total < 100 ? 'text-warm' : 'text-good'">{{ card.eff.total }}%</span>
+        · {{ t('card.effLight') }} {{ card.eff.light }}%<span v-if="card.eff.fear"> · {{ t('card.effFear') }} −{{ card.eff.fear }}%</span>
+      </span>
     </div>
 
     <p
@@ -116,7 +207,7 @@ function close () {
       v-if="card.wreck !== null"
       class="mt-1 text-[13px] text-mist"
     >
-      {{ t('card.wreckLeft', { n: Math.floor(card.wreck) }) }}
+      <ResourceIcon id="iron" /> {{ t('card.wreckLeft', { n: Math.floor(card.wreck) }) }}
     </p>
 
     <button

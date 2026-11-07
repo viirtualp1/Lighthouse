@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { Anchor, Axe, Church, Cross, Flame, Fuel, GraduationCap, House, Lamp, Menu, Volume2, VolumeX, Wrench } from '@lucide/vue';
-import { BUILD_ORDER, BUILDINGS } from '@/game/config';
+import { BUILD_GROUPS, BUILDINGS } from '@/game/config';
 import { canAfford } from '@/game/sim';
 import { useI18n } from 'vue-i18n';
+import ResourceIcon from './ResourceIcon.vue';
 import { useGame } from './useGame';
 import { useSettings } from './useSettings';
 import { useTutorial } from './useTutorial';
@@ -29,11 +30,14 @@ const settings = useSettings();
 
 const hovered = ref<BuildingId | null>(null);
 
-const items = computed(() => BUILD_ORDER.map(id => ({
-  id,
-  def: BUILDINGS[id],
-  icon: ICONS[id],
-  affordable: canAfford(game.state.value, id)
+const groups = computed(() => BUILD_GROUPS.map(group => ({
+  id: group.id,
+  items: group.items.map(id => ({
+    id,
+    def: BUILDINGS[id],
+    icon: ICONS[id],
+    affordable: canAfford(game.state.value, id)
+  }))
 })));
 
 const tip = computed(() => {
@@ -45,6 +49,7 @@ const tip = computed(() => {
 
   const def = BUILDINGS[id];
   const cost = (Object.keys(def.cost) as ResourceId[]).map(r => ({
+    id: r,
     name: t(`resources.${r}`),
     amount: def.cost[r] ?? 0,
     short: game.state.value.resources[r] < (def.cost[r] ?? 0)
@@ -69,10 +74,15 @@ const tip = computed(() => {
       <div class="mt-2 flex gap-3">
         <span
           v-for="c in tip.cost"
-          :key="c.name"
-          class="num text-[13px]"
+          :key="c.id"
+          class="num flex items-center gap-1.5 text-[14px]"
           :class="c.short ? 'text-danger' : 'text-snow'"
-        >{{ c.amount }} <span class="label">{{ c.name }}</span></span>
+        >
+          <ResourceIcon
+            :id="c.id"
+            :size="15"
+          />{{ c.amount }} <span class="label">{{ c.name }}</span>
+        </span>
         <span
           v-if="tip.def.maxWorkers"
           class="num ml-auto text-[13px] text-mist"
@@ -81,28 +91,38 @@ const tip = computed(() => {
     </div>
 
     <div class="flex items-stretch gap-2">
-      <div class="plate pointer-events-auto flex gap-1 p-1.5">
-        <button
-          v-for="item in items"
-          :key="item.id"
-          class="hud-btn h-16 min-w-[72px] flex-col gap-1 px-2.5 whitespace-nowrap normal-case tracking-normal"
-          :class="{ on: game.view.placing === item.id }"
-          :disabled="!item.affordable && game.view.placing !== item.id"
-          :data-tour="`build-${item.id}`"
-          @mouseenter="hovered = item.id"
-          @mouseleave="hovered = null"
-          @click="game.startPlacing(item.id)"
+      <div class="plate pointer-events-auto flex items-stretch p-1.5">
+        <section
+          v-for="(group, g) in groups"
+          :key="group.id"
+          class="flex flex-col gap-1 px-1.5"
+          :class="{ 'border-l border-snow/10': g > 0 }"
         >
-          <component
-            :is="item.icon"
-            :size="24"
-            :stroke-width="1.5"
-          />
-          <span class="text-[11px] leading-tight">{{ t(`buildings.${item.id}.name`) }}</span>
-        </button>
+          <span class="label px-1 text-[9px] whitespace-nowrap">{{ t(`build.groups.${group.id}`) }}</span>
+          <div class="flex gap-1">
+            <button
+              v-for="item in group.items"
+              :key="item.id"
+              class="hud-btn h-16 min-w-[72px] flex-col gap-1 px-2.5 whitespace-nowrap normal-case tracking-normal"
+              :class="{ on: game.view.placing === item.id }"
+              :disabled="!item.affordable && game.view.placing !== item.id"
+              :data-tour="`build-${item.id}`"
+              @mouseenter="hovered = item.id"
+              @mouseleave="hovered = null"
+              @click="game.startPlacing(item.id)"
+            >
+              <component
+                :is="item.icon"
+                :size="24"
+                :stroke-width="1.5"
+              />
+              <span class="text-[11px] leading-tight">{{ t(`buildings.${item.id}.name`) }}</span>
+            </button>
+          </div>
+        </section>
       </div>
 
-      <div class="plate pointer-events-auto flex gap-1 p-1.5">
+      <div class="plate pointer-events-auto flex items-end gap-1 p-1.5">
         <button
           class="hud-btn h-16 min-w-[64px] flex-col gap-1 px-2.5 whitespace-nowrap normal-case tracking-normal"
           :class="{ on: game.menuOpen.value }"

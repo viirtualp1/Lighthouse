@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { TrendingDown, TrendingUp } from '@lucide/vue';
 import { GAME } from '@/game/config';
+import { fearRate } from '@/game/sim';
 import type { LogEntry } from '@/game/state';
 import { useI18n } from 'vue-i18n';
 import { useGame } from './useGame';
@@ -36,6 +38,7 @@ const fear = computed(() => {
   return {
     value,
     state,
+    rate: value >= GAME.fearLoseAt || (value <= 0 && fearRate(s.value) < 0) ? 0 : fearRate(s.value),
     arc: arc(0, value / 100),
     color: value >= GAME.fearDesertAt ? '#e0574a' : '#f2f4f5',
     ticks: [GAME.fearStrikeAt, GAME.fearDesertAt].map(t => tick(t / 100))
@@ -128,6 +131,21 @@ function tick (t: number) {
           :class="fear.value >= GAME.fearDesertAt ? 'text-danger' : 'text-snow'"
         >
           {{ fear.state }}
+        </div>
+        <div
+          v-if="Math.abs(fear.rate) >= 0.05"
+          class="num mt-0.5 flex items-center gap-1 text-[12px]"
+          :class="fear.rate > 0 ? 'text-danger' : 'text-good'"
+        >
+          <TrendingUp
+            v-if="fear.rate > 0"
+            :size="13"
+          />
+          <TrendingDown
+            v-else
+            :size="13"
+          />
+          {{ fear.rate > 0 ? t('fear.rising', { n: fear.rate.toFixed(1) }) : t('fear.falling', { n: Math.abs(fear.rate).toFixed(1) }) }}
         </div>
       </div>
     </section>

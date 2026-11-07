@@ -2,6 +2,7 @@ import { computed, ref, watch } from 'vue';
 import { BUILDINGS } from '@/game/config';
 import { housing, population } from '@/game/sim';
 import { useGame } from './useGame';
+import type { BuildingId } from '@/game/config';
 import type { Point } from '@/game/map';
 import type { GameState } from '@/game/state';
 
@@ -9,6 +10,8 @@ export interface TutorialStep {
   /** Its texts live under `tutorial.steps.<id>` in the dictionaries. */
   id: string;
   hasTask?: boolean;
+  /** The building this task is about: when the player opens it, the focus moves to its card. */
+  subject?: BuildingId;
   /** A HUD element to point at, by its `data-tour` name. */
   target?: string;
   /** A spot on the map to point at. */
@@ -34,6 +37,7 @@ const STEPS: TutorialStep[] = [
   {
     id: 'workers',
     hasTask: true,
+    subject: 'dock',
     spot: state => state.buildings.find(b => b.type === 'dock') ?? null,
     done: state => (state.buildings.find(b => b.type === 'dock')?.workers ?? 0) >= BUILDINGS.dock.maxWorkers
   },
@@ -46,6 +50,7 @@ const STEPS: TutorialStep[] = [
   {
     id: 'renderer',
     hasTask: true,
+    subject: 'renderer',
     target: 'build-renderer',
     done: state => state.buildings.some(b => b.type === 'renderer' && b.workers > 0)
   },
@@ -111,6 +116,9 @@ export function useTutorial () {
     if (index.value === null) {
       return;
     }
+
+    // A finished task leaves its building open; closing it keeps the next step's focus clear.
+    game.select(null);
 
     if (index.value >= STEPS.length - 1) {
       finish();

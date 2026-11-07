@@ -1,8 +1,8 @@
 import { Application, Container, Graphics, Sprite, Text, Texture } from 'pixi.js';
 import { BUILDINGS, UNIT } from '@/game/config';
-import { lightParams } from '@/game/light';
+import { DARK, levelAt, lightParams } from '@/game/light';
 import { SLOT_RADIUS, slotNear } from '@/game/map';
-import { canPlace, nightness } from '@/game/sim';
+import { canPlace, nightness, shadowAt } from '@/game/sim';
 import { i18n, tr } from '@/i18n';
 import { createDarkness } from './darkness';
 import { drawBuilding } from './drawBuilding';
@@ -42,6 +42,8 @@ export class GameRenderer {
   private windows = new Graphics();
   private flare = new Graphics();
   private pips = new Graphics();
+  private badges = new Graphics();
+  private badgeClock = 0;
   private reach = new Graphics();
   private reachLabels = new Container();
   private reachLayer = new Container();
@@ -97,6 +99,7 @@ export class GameRenderer {
       this.particles.glow,
       this.flare,
       this.pips,
+      this.badges,
       this.overlay
     );
     this.app.stage.addChild(this.world);
@@ -153,6 +156,13 @@ export class GameRenderer {
     this.darkness.update({ light, frontPx: state.shadowFront * UNIT, night, time: this.time });
     this.windows.alpha = 0.25 + night * 0.75;
     this.drawFlare(night, light.dim > 0);
+    this.badgeClock += this.lastSeconds;
+
+    if (this.badgeClock > 0.25 || state.revision !== this.revision) {
+      this.badgeClock = 0;
+      this.drawBadges();
+    }
+
     this.drawReach(1 - night);
     this.drawOverlay(view);
   }
@@ -212,6 +222,13 @@ export class GameRenderer {
         this.world.position.set(this.drag.origin.x + dx, this.drag.origin.y + dy);
         this.clampCamera();
       }
+    }
+
+    // Pixi follows the pointer across the whole page, so a move over the HUD still lands here: only the map counts.
+    if (event.nativeEvent.target !== this.app.canvas) {
+      this.events.hover(null, null, null);
+
+      return;
     }
 
     this.events.hover(slotNear(this.state.map, p.x, p.y)?.id ?? null, { x: p.x, y: p.y }, { x: event.global.x, y: event.global.y });
@@ -277,6 +294,48 @@ export class GameRenderer {
         }
       }
     }
+  }
+
+  /**
+   * Small signs above buildings for the problems a player must not miss: nobody at work, the Shadow on it now, or
+   * darkness waiting for it tonight. They keep the essentials on the map instead of only in tooltips.
+   */
+  private drawBadges () {
+    const g = this.badges;
+    const state = this.state;
+    const planned = lightParams(state, true);
+    const pulse = 0.75 + Math.sin(this.time * 5) * 0.25;
+    g.clear();
+
+    for (const b of state.buildings) {
+      if (b.type === 'lighthouse') {
+        continue;
+      }
+
+      const def = BUILDINGS[b.type];
+      const peopled = b.workers > 0 || !!def.housing;
+      const x = b.x;
+      const y = b.y - 50;
+
+      if (state.phase !== 'day' && peopled && shadowAt(state, b.slot) >= 0.7) {
+        this.badge(x, y, PALETTE.danger, pulse);
+        g.rect(x - 1.2, y - 5, 2.4, 6.5).fill(PALETTE.danger);
+        g.circle(x, y + 4.3, 1.4).fill(PALETTE.danger);
+      } else if (def.maxWorkers > 0 && b.workers === 0) {
+        this.badge(x, y, PALETTE.mist, 1);
+        g.circle(x, y - 2.6, 2.4).fill(PALETTE.white);
+        g.roundRect(x - 3.8, y + 0.8, 7.6, 4.2, 2).fill(PALETTE.white);
+        g.moveTo(x - 5.5, y + 5.5).lineTo(x + 5.5, y - 5.5).stroke({ width: 1.6, color: PALETTE.danger });
+      } else if (state.phase === 'day' && peopled && levelAt(planned, b.x, b.y) === DARK) {
+        this.badge(x, y, PALETTE.warm, 1);
+        g.circle(x, y, 5).fill(PALETTE.warm).circle(x + 2.6, y - 1.8, 4.2).cut();
+      }
+    }
+  }
+
+  private badge (x: number, y: number, color: number, alpha: number) {
+    this.badges.moveTo(x, y + 9).lineTo(x, y + 18).stroke({ width: 1, color, alpha: 0.5 * alpha });
+    this.badges.circle(x, y, 9.5).fill({ color: 0x0b0d10, alpha: 0.92 }).stroke({ width: 1.5, color, alpha });
   }
 
   private drawWindow (at: Point, w: Window) {

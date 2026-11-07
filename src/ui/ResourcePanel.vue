@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { Anvil, BedDouble, Droplet, Fish, HeartPulse, TreePine, Users } from '@lucide/vue';
-import { RESOURCE_IDS } from '@/game/config';
-import { assignedWorkers, housing, population, rates } from '@/game/sim';
+import { computed, ref } from 'vue';
+import { BedDouble, HeartPulse, Users } from '@lucide/vue';
 import { useI18n } from 'vue-i18n';
+import { RESOURCE_IDS } from '@/game/config';
+import { assignedWorkers, housing, population, rateBreakdown, rates } from '@/game/sim';
+import ResourceIcon from './ResourceIcon.vue';
 import { useGame } from './useGame';
 import type { Component } from 'vue';
 import type { ResourceId } from '@/game/config';
 
-interface Row {
+interface PeopleRow {
   id: string;
   name: string;
   icon: Component;
@@ -18,33 +19,42 @@ interface Row {
   iconTone: string;
 }
 
-const ICONS: Record<ResourceId, Component> = {
-  oil: Droplet,
-  fish: Fish,
-  wood: TreePine,
-  iron: Anvil
-};
-
 const game = useGame();
 const { t } = useI18n();
 
 const s = game.state;
 
-const resources = computed<Row[]>(() => {
+const hovered = ref<ResourceId | null>(null);
+
+const resources = computed(() => {
   const perHour = rates(s.value);
 
   return RESOURCE_IDS.map(id => ({
     id,
     name: t(`resources.${id}`),
-    icon: ICONS[id],
     value: Math.floor(s.value.resources[id]),
     note: formatRate(perHour[id]),
-    tone: perHour[id] < -0.05 ? 'text-danger' : 'text-good',
-    iconTone: id === 'oil' ? 'text-warm' : 'text-mist'
+    tone: perHour[id] < -0.05 ? 'text-danger' : 'text-good'
   }));
 });
 
-const people = computed<Row[]>(() => {
+/** The hovered resource's sources and drains, so a falling number can be traced to the building behind it. */
+const breakdown = computed(() => {
+  if (!hovered.value) {
+    return null;
+  }
+
+  const rows = rateBreakdown(s.value)[hovered.value].map(row => ({
+    name: row.source === 'beam' ? t('supplies.sourceBeam') : row.source === 'lanterns' ? t('supplies.sourceLanterns') : t(`buildings.${row.source}.name`),
+    amount: row.amount
+  }));
+
+  const eaten = hovered.value === 'fish' ? population(s.value) : 0;
+
+  return { id: hovered.value, rows, eaten };
+});
+
+const people = computed<PeopleRow[]>(() => {
   const total = population(s.value);
   const beds = housing(s.value);
   const idle = s.value.healthy - assignedWorkers(s.value);
@@ -74,21 +84,60 @@ function formatRate (rate: number) {
 </script>
 
 <template>
-  <section class="plate pointer-events-auto w-80 p-4">
+  <section class="plate pointer-events-auto relative w-80 p-4">
+    <div
+      v-if="breakdown"
+      class="plate absolute right-full top-0 mr-2 w-64 px-4 py-3 whitespace-nowrap"
+    >
+      <div class="mb-2 flex items-center gap-2">
+        <ResourceIcon
+          :id="breakdown.id"
+          :size="16"
+        />
+        <span class="display text-xl leading-none">{{ t(`resources.${breakdown.id}`) }}</span>
+      </div>
+      <ul class="space-y-1">
+        <li
+          v-for="row in breakdown.rows"
+          :key="row.name"
+          class="flex justify-between gap-4 text-[13px]"
+        >
+          <span class="text-mist">{{ row.name }}</span>
+          <span
+            class="num"
+            :class="row.amount < 0 ? 'text-danger' : 'text-good'"
+          >{{ formatRate(row.amount) }}</span>
+        </li>
+        <li
+          v-if="breakdown.eaten"
+          class="flex justify-between gap-4 border-t border-snow/10 pt-1 text-[13px]"
+        >
+          <span class="text-mist">{{ t('supplies.eaten') }}</span>
+          <span class="num text-danger">−{{ breakdown.eaten }}</span>
+        </li>
+        <li
+          v-if="!breakdown.rows.length && !breakdown.eaten"
+          class="text-[13px] text-fog"
+        >
+          {{ t('supplies.steady') }}
+        </li>
+      </ul>
+    </div>
+
     <div class="label mb-2">
       {{ t('supplies.title') }}
     </div>
-    <ul class="space-y-2">
+    <ul class="space-y-1">
       <li
         v-for="row in resources"
         :key="row.id"
-        class="flex items-center gap-3 whitespace-nowrap"
+        class="-mx-2 flex cursor-default items-center gap-3 rounded-[2px] px-2 py-0.5 whitespace-nowrap transition-colors hover:bg-snow/5"
+        @mouseenter="hovered = row.id"
+        @mouseleave="hovered = null"
       >
-        <component
-          :is="row.icon"
+        <ResourceIcon
+          :id="row.id"
           :size="19"
-          :stroke-width="1.6"
-          :class="row.iconTone"
         />
         <span class="flex-1 text-[15px] text-mist">{{ row.name }}</span>
         <span

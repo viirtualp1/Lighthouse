@@ -164,14 +164,12 @@ export const BUILDINGS: Record<BuildingId, BuildingDef> = {
   }
 };
 
-export const BUILD_ORDER: BuildingId[] = [
-  'hut',
-  'dock',
-  'driftwood',
-  'renderer',
-  'oilCollector',
-  'salvage',
-  'lantern',
-  'infirmary',
-  'chapel'
+export type BuildGroupId = 'home' | 'food' | 'materials' | 'care';
+
+/** The build bar's sections: grouped by what a building is for, so the player looks in one place per need. */
+export const BUILD_GROUPS: { id: BuildGroupId; items: BuildingId[] }[] = [
+  { id: 'home', items: ['hut'] },
+  { id: 'food', items: ['dock', 'renderer', 'oilCollector'] },
+  { id: 'materials', items: ['driftwood', 'salvage'] },
+  { id: 'care', items: ['lantern', 'infirmary', 'chapel'] }
 ];

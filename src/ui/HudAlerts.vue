@@ -1,15 +1,19 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { TriangleExclamationPoint, ChevronRight } from '@lucide/vue';
+import { BedDouble, ChevronRight, Eye, Ghost, HeartPulse, TriangleExclamationPoint, Users } from '@lucide/vue';
 import { BUILDINGS, GAME } from '@/game/config';
 import { oilPerHour } from '@/game/light';
 import { assignedWorkers, forecast, housing, nightHours, population, rates, shadowAt } from '@/game/sim';
 import { useI18n } from 'vue-i18n';
+import ResourceIcon from './ResourceIcon.vue';
 import { useGame } from './useGame';
-import type { BuildingId } from '@/game/config';
+import type { Component } from 'vue';
+import type { BuildingId, ResourceId } from '@/game/config';
 
 interface Alert {
   id: string;
+  resource?: ResourceId;
+  icon?: Component;
   text: string;
   severe: boolean;
   action: string;
@@ -35,6 +39,7 @@ const alerts = computed(() => {
   if (s.resources.oil < oilNeeded) {
     list.push({
       id: 'oil',
+      resource: 'oil',
       text: t('alerts.oil', { need: oilNeeded, have: Math.floor(s.resources.oil) }),
       severe: true,
       action: t('alerts.oilAction'),
@@ -45,6 +50,7 @@ const alerts = computed(() => {
   if (s.resources.fish + rates(s).fish * hoursToDawn < pop) {
     list.push({
       id: 'fish',
+      resource: 'fish',
       text: t('alerts.fish', { n: pop }),
       severe: true,
       action: t('alerts.fishAction'),
@@ -68,6 +74,7 @@ const alerts = computed(() => {
     if (exposed.length) {
       list.push({
         id: 'exposed',
+        icon: Eye,
         text: t('alerts.exposed', { n: exposed.reduce((n, b) => n + b.workers, 0) }),
         severe: true,
         action: t('alerts.exposedAction'),
@@ -79,6 +86,7 @@ const alerts = computed(() => {
   if (homeless > 0) {
     list.push({
       id: 'homeless',
+      icon: BedDouble,
       text: t('alerts.homeless', { n: homeless }),
       severe: false,
       action: t('alerts.homelessAction'),
@@ -89,6 +97,7 @@ const alerts = computed(() => {
   if (idle > 0) {
     list.push({
       id: 'idle',
+      icon: Users,
       text: t('alerts.idle', { n: idle }),
       severe: false,
       action: t('alerts.idleAction'),
@@ -99,6 +108,7 @@ const alerts = computed(() => {
   if (s.sick > 0 && !s.buildings.some(b => b.type === 'infirmary')) {
     list.push({
       id: 'sick',
+      icon: HeartPulse,
       text: t('alerts.sick', { n: s.sick }),
       severe: false,
       action: t('alerts.sickAction'),
@@ -109,6 +119,7 @@ const alerts = computed(() => {
   if (s.fear >= GAME.fearStrikeAt && !s.buildings.some(b => b.type === 'chapel')) {
     list.push({
       id: 'fear',
+      icon: Ghost,
       text: t('alerts.fear'),
       severe: s.fear >= GAME.fearDesertAt,
       action: t('alerts.fearAction'),
@@ -156,12 +167,23 @@ function assignIdle () {
         class="plate pointer-events-auto flex items-center gap-3 px-3 py-2.5 text-left whitespace-nowrap transition-colors hover:border-snow/40"
         @click="alert.run()"
       >
-        <TriangleExclamationPoint
-          :size="18"
-          :stroke-width="1.6"
-          class="shrink-0"
-          :class="alert.severe ? 'text-danger' : 'text-mist'"
-        />
+        <span
+          class="grid h-7 w-7 shrink-0 place-items-center rounded-full border"
+          :class="alert.severe ? 'border-danger/60 bg-danger/15' : 'border-snow/20 bg-snow/5'"
+        >
+          <ResourceIcon
+            v-if="alert.resource"
+            :id="alert.resource"
+            :size="15"
+          />
+          <component
+            :is="alert.icon ?? TriangleExclamationPoint"
+            v-else
+            :size="15"
+            :stroke-width="1.7"
+            :class="alert.severe ? 'text-danger' : 'text-mist'"
+          />
+        </span>
         <span class="flex-1 text-[14px] leading-snug">{{ alert.text }}</span>
         <span class="label flex shrink-0 items-center text-snow">{{ alert.action }}<ChevronRight :size="14" /></span>
       </button>

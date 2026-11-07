@@ -38,6 +38,8 @@ export default {
     speed: 'Speed ×{n} · key {n}'
   },
   fear: {
+    rising: 'rising {n}/h',
+    falling: 'easing {n}/h',
     title: 'Fear',
     calm: 'Calm',
     uneasy: 'Uneasy',
@@ -60,6 +62,10 @@ export default {
     lensHint: 'The light reaches one ring further for the same oil'
   },
   supplies: {
+    sourceBeam: 'Lighthouse',
+    sourceLanterns: 'Lanterns',
+    eaten: 'Eaten at dawn',
+    steady: 'Not changing right now',
     title: 'Supplies',
     town: 'Town',
     people: 'Residents',
@@ -70,9 +76,24 @@ export default {
     perHour: '/h'
   },
   build: {
+    groups: {
+      home: 'Shelter',
+      food: 'Food & oil',
+      materials: 'Materials',
+      care: 'Light & care'
+    },
     upTo: 'up to {n} workers'
   },
   card: {
+    output: 'Output now',
+    efficiency: 'Efficiency',
+    effLight: 'light',
+    effFear: 'fear',
+    houses: 'Shelters up to {n} people',
+    healing: 'Heals the sick: {n} waiting',
+    calming: 'Calms the town: −1 Fear per hour',
+    calmingIdle: 'Needs a worker to calm the town',
+    nothing: 'Idle — no workers',
     workers: 'Workers',
     free: '{n} free',
     close: 'Close',
@@ -101,6 +122,7 @@ export default {
     fearAction: 'Chapel'
   },
   map: {
+    noWorkers: 'No workers — not producing',
     aimHint: 'Click where the beam should point · Q / E to rotate · RMB to cancel',
     placeHint: 'Pick a spot for the {building} — suitable spots are marked with dots · RMB to cancel',
     freeSpot: 'Empty spot',
@@ -232,7 +254,7 @@ export default {
       },
       workers: {
         title: 'People',
-        text: 'The dots under a building are its workplaces. Click the dock and add workers: fish feeds the town every morning.',
+        text: 'The dots under a building are its workplaces; a crossed-out figure above it means nobody works there. Click the dock and add workers: fish feeds the town every morning.',
         task: 'Put 5 workers on the dock'
       },
       hut: {
@@ -251,7 +273,7 @@ export default {
       },
       modes: {
         title: 'Light modes',
-        text: 'Circle lights the town evenly. Beam reaches far, but in one direction. Boost lights wider but burns oil three times faster. By day the map shows where tonight’s light will reach.'
+        text: 'Circle lights the town evenly. Beam reaches far, but in one direction. Boost lights wider but burns oil three times faster. By day the map shows where tonight’s light will reach, and a moon above a building warns it will be in the dark.'
       },
       fear: {
         title: 'Fear',

@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import { forecast, population } from '@/game/sim';
 import { useI18n } from 'vue-i18n';
+import ResourceIcon from './ResourceIcon.vue';
 import { useGame } from './useGame';
 
 const game = useGame();
@@ -56,7 +57,12 @@ const lines = computed(() => {
             :key="line.key"
             class="flex justify-between border-b border-snow/10 pb-1"
           >
-            <span class="text-mist">{{ t(`dawn.${line.key}`) }}</span>
+            <span class="flex items-center gap-1.5 text-mist">
+              <ResourceIcon
+                v-if="line.key === 'eaten'"
+                id="fish"
+              />{{ t(`dawn.${line.key}`) }}
+            </span>
             <span
               class="num"
               :class="line.bad ? 'text-danger' : 'text-snow'"
@@ -73,7 +79,7 @@ const lines = computed(() => {
             <span class="num text-snow">{{ t('dawn.hours', { h: next.hours }) }}</span>
           </li>
           <li class="flex justify-between">
-            <span class="text-mist">{{ t('dawn.oilNeeded') }}</span>
+            <span class="flex items-center gap-1.5 text-mist"><ResourceIcon id="oil" />{{ t('dawn.oilNeeded') }}</span>
             <span
               class="num"
               :class="next.oil > game.state.value.resources.oil ? 'text-danger' : 'text-warm'"

@@ -91,7 +91,9 @@ function currentFocus () {
     return null;
   }
 
-  if (current.hasTask && game.view.selectedId !== null) {
+  const selected = game.state.value.buildings.find(b => b.id === game.view.selectedId);
+
+  if (current.subject && selected?.type === current.subject) {
     const card = elementFocus('building-card');
 
     if (card) {

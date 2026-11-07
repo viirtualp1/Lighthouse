@@ -5,7 +5,9 @@ import { DIM, LIT, tonightRisk } from '@/game/light';
 import { canPlace, lightAt, shadowAt, workFactor } from '@/game/sim';
 import { GameRenderer } from '@/render/GameRenderer';
 import { useI18n } from 'vue-i18n';
+import ResourceIcon from './ResourceIcon.vue';
 import { useGame } from './useGame';
+import type { ResourceId } from '@/game/config';
 
 let renderer: GameRenderer | null = null;
 
@@ -36,7 +38,7 @@ const tooltip = computed(() => {
     return null;
   }
 
-  const lines: { text: string; tone: string }[] = [];
+  const lines: { text: string; tone: string; resource?: ResourceId }[] = [];
   const building = s.buildings.find(b => b.slot === slot.id);
   let title = t('map.freeSpot');
 
@@ -46,7 +48,7 @@ const tooltip = computed(() => {
     title = t(`buildings.${building.type}.name`);
 
     if (def.maxWorkers) {
-      lines.push({ text: t('map.workers', { n: building.workers, max: def.maxWorkers }), tone: building.workers ? 'text-snow' : 'text-danger' });
+      lines.push({ text: building.workers ? t('map.workers', { n: building.workers, max: def.maxWorkers }) : t('map.noWorkers'), tone: building.workers ? 'text-snow' : 'text-danger' });
     }
 
     if (factor === 0) {
@@ -58,10 +60,10 @@ const tooltip = computed(() => {
     lines.push({ text: t('map.manage'), tone: 'text-fog' });
   } else if (slot.kind === 'oil') {
     title = t('map.oilPool');
-    lines.push({ text: t('map.oilPoolHint'), tone: 'text-mist' });
+    lines.push({ text: t('map.oilPoolHint'), tone: 'text-mist', resource: 'oil' });
   } else if (slot.kind === 'wreck') {
     title = t('map.wreck');
-    lines.push({ text: t('map.wreckHint', { n: Math.floor(slot.wreckIron) }), tone: 'text-mist' });
+    lines.push({ text: t('map.wreckHint', { n: Math.floor(slot.wreckIron) }), tone: 'text-mist', resource: 'iron' });
   } else if (slot.shore) {
     lines.push({ text: t('map.shore'), tone: 'text-mist' });
   }
@@ -135,10 +137,13 @@ onBeforeUnmount(() => {
       <p
         v-for="line in tooltip.lines"
         :key="line.text"
-        class="mt-0.5 text-[14px]"
+        class="mt-0.5 flex items-center gap-1.5 text-[14px]"
         :class="line.tone"
       >
-        {{ line.text }}
+        <ResourceIcon
+          v-if="line.resource"
+          :id="line.resource"
+        />{{ line.text }}
       </p>
     </div>
   </div>

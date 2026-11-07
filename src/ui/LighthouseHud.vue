@@ -5,6 +5,7 @@ import { BEAM_MODES, GAME } from '@/game/config';
 import { lighthouseReach, oilPerHour } from '@/game/light';
 import { forecast } from '@/game/sim';
 import { useI18n } from 'vue-i18n';
+import ResourceIcon from './ResourceIcon.vue';
 import { useGame } from './useGame';
 import type { BeamMode } from '@/game/config';
 
@@ -27,7 +28,8 @@ const nights = computed(() => forecast(s.value, 5));
       <h2 class="display text-3xl leading-none">
         {{ t('lighthouse.title') }}
       </h2>
-      <span class="label">
+      <span class="label flex items-center gap-1.5">
+        <ResourceIcon id="oil" />
         <span class="num text-warm">{{ oilPerHour(s).toFixed(1) }}</span> {{ t('lighthouse.oilPerHour') }}
       </span>
     </header>
@@ -87,9 +89,12 @@ const nights = computed(() => forecast(s.value, 5));
           :title="t('lighthouse.forecast', { day: n.day, h: n.hours, oil: n.oil })"
         >
           <span
-            class="num text-[10px]"
+            class="num flex items-center gap-0.5 text-[10px]"
             :class="n.oil > s.resources.oil ? 'text-danger' : 'text-warm'"
-          >{{ n.oil }}</span>
+          ><ResourceIcon
+            id="oil"
+            :size="9"
+          />{{ n.oil }}</span>
           <div
             class="w-full rounded-[1px] border border-snow/25"
             :class="n.day === s.day ? 'bg-snow/80' : 'bg-snow/10'"
@@ -142,7 +147,7 @@ const nights = computed(() => forecast(s.value, 5));
       :title="t('lighthouse.lensHint')"
       @click="game.buyLens()"
     >
-      {{ t('lighthouse.lens', { n: GAME.lensIron }) }}
+      <ResourceIcon id="iron" />{{ t('lighthouse.lens', { n: GAME.lensIron }) }}
     </button>
   </section>
 </template>

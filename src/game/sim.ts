@@ -335,7 +335,8 @@ function moveShadow (state: GameState, hours: number) {
   });
 }
 
-function changeFear (state: GameState, hours: number) {
+/** How fast Fear is moving right now, per hour: positive while it grows. */
+export function fearRate (state: GameState) {
   let delta = 0;
 
   if (state.phase === 'night') {
@@ -367,7 +368,11 @@ function changeFear (state: GameState, hours: number) {
     delta -= GAME.fearChapel;
   }
 
-  state.fear = Math.max(0, Math.min(GAME.fearLoseAt, state.fear + delta * hours));
+  return delta;
+}
+
+function changeFear (state: GameState, hours: number) {
+  state.fear = Math.max(0, Math.min(GAME.fearLoseAt, state.fear + fearRate(state) * hours));
 }
 
 function shadowTakes (state: GameState) {
@@ -582,6 +587,62 @@ export function rates (state: GameState) {
   }
 
   return result;
+}
+
+export interface RateSource {
+  /** A building type, or 'beam' / 'lanterns' for the light's own burn. */
+  source: BuildingId | 'beam' | 'lanterns';
+  amount: number;
+}
+
+/** Where each resource's hourly change comes from, grouped by building type, for the supplies tooltip. */
+export function rateBreakdown (state: GameState) {
+  const result: Record<ResourceId, RateSource[]> = { oil: [], fish: [], wood: [], iron: [] };
+  const k = fearFactor(state);
+
+  const add = (resource: ResourceId, source: RateSource['source'], amount: number) => {
+    if (Math.abs(amount) < 0.01) {
+      return;
+    }
+
+    const row = result[resource].find(r => r.source === source);
+
+    if (row) {
+      row.amount += amount;
+    } else {
+      result[resource].push({ source, amount });
+    }
+  };
+
+  for (const b of state.buildings) {
+    const output = b.workers * workFactor(state, b) * k;
+
+    if (b.type === 'dock') {
+      add('fish', 'dock', output);
+    } else if (b.type === 'driftwood') {
+      add('wood', 'driftwood', output);
+    } else if (b.type === 'oilCollector') {
+      add('oil', 'oilCollector', output * 0.5);
+    } else if (b.type === 'renderer') {
+      add('fish', 'renderer', -output * 2);
+      add('oil', 'renderer', output);
+    } else if (b.type === 'salvage' && (state.map.slots[b.slot]?.wreckIron ?? 0) > 0) {
+      add('iron', 'salvage', output * 0.5);
+    }
+  }
+
+  if (state.phase !== 'day') {
+    const lanterns = state.buildings.filter(b => b.type === 'lantern').length;
+    add('oil', 'beam', -(oilPerHour(state) - lanterns * GAME.lanternOilPerHour));
+    add('oil', 'lanterns', -lanterns * GAME.lanternOilPerHour);
+  }
+
+  return result;
+}
+
+/** How much a building turns out right now, as a share of a full shift: light and Fear both cut into it. */
+export function efficiency (state: GameState, building: Building) {
+  return { total: workFactor(state, building) * fearFactor(state), light: workFactor(state, building), fear: fearFactor(state) };
 }
 
 export function closeDawnReport (state: GameState) {
