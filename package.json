@@ -12,7 +12,8 @@
     "desktop": "bun run desktop:build && electron .",
     "desktop:dev": "tsc -p tsconfig.electron.json && LIGHTHOUSE_DEV_URL=http://localhost:5173 electron .",
     "desktop:package": "bun run desktop:build && electron-builder --dir",
-    "desktop:dist": "bun run desktop:build && electron-builder"
+    "desktop:dist": "bun run desktop:build && electron-builder",
+    "art": "bun scripts/art.ts"
   },
   "dependencies": {
     "@fontsource/cormorant-garamond": "^5.3.0",
@@ -24,6 +25,7 @@
     "vue-i18n": "^11.4.18"
   },
   "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/vite": "^4.3.5",
     "@types/node": "^26.6.6",
     "@vitejs/plugin-vue": "^6.0.10",

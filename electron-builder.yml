@@ -13,6 +13,11 @@ asar: true
 npmRebuild: false
 mac:
   category: public.app-category.strategy-games
+  # Without a Developer ID the whole bundle still needs a signature, or macOS reports the app as damaged.
+  # '-' signs it ad hoc: it opens after the usual "unidentified developer" confirmation.
+  identity: '-'
+  # Hardened runtime only matters for notarization, which needs a Developer ID; with an ad hoc signature it can stop launch.
+  hardenedRuntime: false
   target:
     - dir
     - dmg
@@ -24,3 +29,19 @@ linux:
   target:
     - dir
     - AppImage
+dmg:
+  # A night window: the Lighthouse between the app and Applications, its beam pointing the way across.
+  # build/background@2x.png is picked up for Retina screens; regenerate both with `bun run art`.
+  background: build/background.png
+  iconSize: 96
+  window:
+    width: 660
+    height: 400
+  contents:
+    - x: 150
+      y: 200
+      type: file
+    - x: 510
+      y: 200
+      type: link
+      path: /Applications
