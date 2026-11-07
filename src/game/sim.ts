@@ -256,6 +256,11 @@ function residents (state: GameState) {
   return { homes, homeless: left };
 }
 
+/** How many people sleep in this hut tonight. */
+export function residentsOf (state: GameState, buildingId: number) {
+  return residents(state).homes.find(home => home.hut.id === buildingId)?.count ?? 0;
+}
+
 function produce (state: GameState, hours: number) {
   const k = fearFactor(state);
 

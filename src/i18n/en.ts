@@ -85,11 +85,13 @@ export default {
     upTo: 'up to {n} workers'
   },
   card: {
+    residents: 'Residents',
+    inShadowHome: 'In the Shadow — residents are being taken',
+    dimHome: 'Dim light — residents are afraid',
     output: 'Output now',
     efficiency: 'Efficiency',
     effLight: 'light',
     effFear: 'fear',
-    houses: 'Shelters up to {n} people',
     healing: 'Heals the sick: {n} waiting',
     calming: 'Calms the town: −1 Fear per hour',
     calmingIdle: 'Needs a worker to calm the town',
@@ -97,7 +99,6 @@ export default {
     workers: 'Workers',
     free: '{n} free',
     close: 'Close',
-    fullPower: 'Working at full strength',
     inShadow: 'In the Shadow — work stops, people are taken',
     dim: 'Dim light — work at half speed',
     wreckLeft: 'Iron left in the wreck: {n}',
@@ -142,6 +143,8 @@ export default {
     clickToBuild: 'Click to build'
   },
   risk: {
+    dimHome: 'At night: dim — residents will be afraid',
+    darkHome: 'At night the Shadow will stand here — residents will be taken',
     lit: 'At night: in the Lighthouse light — safe',
     dim: 'At night: dim — work at half speed, residents are afraid',
     dark: 'At night the Shadow will stand here — work stops, people get taken'

@@ -2,9 +2,9 @@
 import { computed } from 'vue';
 import { Minus, Plus, Trash, User, X } from '@lucide/vue';
 import { BUILDINGS } from '@/game/config';
-import { LIT, tonightRisk } from '@/game/light';
-import { assignedWorkers, efficiency, workFactor } from '@/game/sim';
+import { assignedWorkers, efficiency, residentsOf } from '@/game/sim';
 import { useI18n } from 'vue-i18n';
+import { buildingStatus } from './buildingStatus';
 import ResourceIcon from './ResourceIcon.vue';
 import { useGame } from './useGame';
 import type { ResourceId } from '@/game/config';
@@ -21,21 +21,10 @@ const card = computed(() => {
   }
 
   const def = BUILDINGS[building.type];
-  const factor = workFactor(s, building);
   const wreck = building.type === 'salvage' ? s.map.slots[building.slot]?.wreckIron ?? 0 : null;
-  let status = { text: t('card.fullPower'), tone: 'text-good' };
-
-  if (s.phase === 'day') {
-    const risk = tonightRisk(s, building.x, building.y);
-
-    if (risk.level !== LIT) {
-      status = { text: t(risk.key), tone: risk.tone };
-    }
-  } else if (factor === 0) {
-    status = { text: t('card.inShadow'), tone: 'text-danger' };
-  } else if (factor < 1) {
-    status = { text: t('card.dim'), tone: 'text-warm' };
-  }
+  const risk = buildingStatus(s, building);
+  const status = risk ? { text: t(risk.key), tone: risk.tone } : null;
+  const residents = def.housing ? residentsOf(s, building.id) : null;
 
   const eff = efficiency(s, building);
   const work = building.workers * eff.total;
@@ -52,8 +41,6 @@ const card = computed(() => {
     outputs.push({ id: 'oil', amount: work }, { id: 'fish', amount: -work * 2 });
   } else if (building.type === 'salvage') {
     outputs.push({ id: 'iron', amount: (wreck ?? 0) > 0 ? work * 0.5 : 0 });
-  } else if (building.type === 'hut') {
-    note = t('card.houses', { n: def.housing ?? 0 });
   } else if (building.type === 'infirmary') {
     note = t('card.healing', { n: s.sick });
   } else if (building.type === 'chapel') {
@@ -69,6 +56,7 @@ const card = computed(() => {
     def,
     status,
     wreck,
+    residents: residents === null ? null : Array.from({ length: def.housing ?? 0 }, (_, i) => i < residents),
     outputs: building.workers ? outputs : [],
     note,
     eff: { total: Math.round(eff.total * 100), light: Math.round(eff.light * 100), fear: Math.round((1 - eff.fear) * 100) },
@@ -199,8 +187,25 @@ function formatAmount (amount: number) {
     >
       <ResourceIcon id="iron" />{{ t('card.wreckLeft', { n: Math.floor(card.wreck) }) }}
     </p>
+    <div
+      v-if="card.residents"
+      class="mt-4 flex items-center justify-center gap-0.5"
+      :title="t('card.residents')"
+    >
+      <span
+        v-for="(home, i) in card.residents"
+        :key="i"
+        class="grid h-8 w-8 place-items-center"
+      >
+        <User
+          :size="20"
+          :stroke-width="1.6"
+          :class="home ? 'fill-snow text-snow' : 'text-snow/30'"
+        />
+      </span>
+    </div>
     <p
-      v-if="card.status.tone !== 'text-good'"
+      v-if="card.status"
       class="mt-3 text-[13px]"
       :class="card.status.tone"
     >

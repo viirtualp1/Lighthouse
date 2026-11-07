@@ -2,9 +2,10 @@
 import { computed, onBeforeUnmount, onMounted, useTemplateRef } from 'vue';
 import { BUILDINGS } from '@/game/config';
 import { DIM, LIT, tonightRisk } from '@/game/light';
-import { canPlace, lightAt, shadowAt, workFactor } from '@/game/sim';
+import { canPlace, lightAt, residentsOf, shadowAt } from '@/game/sim';
 import { GameRenderer } from '@/render/GameRenderer';
 import { useI18n } from 'vue-i18n';
+import { buildingStatus } from './buildingStatus';
 import ResourceIcon from './ResourceIcon.vue';
 import { useGame } from './useGame';
 import type { ResourceId } from '@/game/config';
@@ -44,17 +45,19 @@ const tooltip = computed(() => {
 
   if (building) {
     const def = BUILDINGS[building.type];
-    const factor = workFactor(s, building);
+    const status = buildingStatus(s, building);
     title = t(`buildings.${building.type}.name`);
 
     if (def.maxWorkers) {
       lines.push({ text: building.workers ? t('map.workers', { n: building.workers, max: def.maxWorkers }) : t('map.noWorkers'), tone: building.workers ? 'text-snow' : 'text-danger' });
     }
 
-    if (factor === 0) {
-      lines.push({ text: t('map.inShadow'), tone: 'text-danger' });
-    } else if (factor < 1) {
-      lines.push({ text: t('map.dim'), tone: 'text-warm' });
+    if (def.housing) {
+      lines.push({ text: `${t('card.residents')} ${residentsOf(s, building.id)}/${def.housing}`, tone: 'text-snow' });
+    }
+
+    if (status) {
+      lines.push({ text: t(status.key), tone: status.tone });
     }
 
     lines.push({ text: t('map.manage'), tone: 'text-fog' });
@@ -68,9 +71,11 @@ const tooltip = computed(() => {
     lines.push({ text: t('map.shore'), tone: 'text-mist' });
   }
 
-  if (s.phase === 'day') {
+  if (!building && s.phase === 'day') {
     const risk = tonightRisk(s, slot.x, slot.y);
-    lines.push({ text: t(risk.key), tone: risk.tone });
+    const home = !!(game.view.placing && BUILDINGS[game.view.placing].housing);
+    const key = home && risk.level !== LIT ? `${risk.key}Home` : risk.key;
+    lines.push({ text: t(key), tone: risk.tone });
   } else if (!building) {
     const light = lightAt(s, slot.id);
     const covered = shadowAt(s, slot.id) >= 0.7;
