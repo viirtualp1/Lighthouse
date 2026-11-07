@@ -35,7 +35,7 @@ const tooltip = computed(() => {
   const at = game.screenPointer.value;
   const slot = slotId === null ? undefined : s.map.slots[slotId];
 
-  if (!slot || !at || game.view.aiming) {
+  if (!slot || !at || game.view.aiming || game.screen.value !== 'game') {
     return null;
   }
 

@@ -25,6 +25,8 @@ export interface ViewState {
   highlight: Point | null;
   /** The player is hovering the Lens upgrade: show how far the light would reach with it. */
   previewLens: boolean;
+  /** Title-screen backdrop: always night, the Lighthouse burning, the Shadow everywhere else, no game markings. */
+  cinematic: boolean;
 }
 
 export interface RendererEvents {
@@ -36,6 +38,7 @@ export interface RendererEvents {
 
 const DRAG_THRESHOLD = 6;
 const SWEEP_SECONDS = 7;
+const CINEMATIC_X = 0.68;
 const MAX_ZOOM = 2.4;
 
 export class GameRenderer {
@@ -51,6 +54,7 @@ export class GameRenderer {
   private reachLabels = new Container();
   private reachLayer = new Container();
   private reachKey = '';
+  private cinematic = false;
   private particles = new Particles();
   private lastSeconds = 0;
   private signature = '';
@@ -151,13 +155,23 @@ export class GameRenderer {
       this.drawPips();
     }
 
-    const night = nightness(state);
-    const light = lightParams(state);
+    if (view.cinematic !== this.cinematic) {
+      this.cinematic = view.cinematic;
+      this.fit();
+    }
+
+    const night = view.cinematic ? 1 : nightness(state);
+    const light = view.cinematic ? lightParams(state, true) : lightParams(state);
+    const front = view.cinematic ? (state.map.maxEdge + 1) * UNIT : state.shadowFront * UNIT;
+
+    this.pips.visible = !view.cinematic;
+    this.badges.visible = !view.cinematic;
+    this.overlay.visible = !view.cinematic;
 
     this.particles.update({ state, light, night, seconds: this.lastSeconds }, effects);
 
     const flicker = 0.93 + Math.sin(this.time * 7.3) * 0.03 + Math.sin(this.time * 17.9) * 0.02 + Math.sin(this.time * 2.1) * 0.02;
-    this.darkness.update({ light, frontPx: state.shadowFront * UNIT, night, time: this.time, sweep: this.sweepAngle(), flicker });
+    this.darkness.update({ light, frontPx: front, night, time: this.time, sweep: this.sweepAngle(), flicker });
     this.windows.alpha = (0.25 + night * 0.75) * (0.92 + Math.sin(this.time * 5.1) * 0.05 + Math.sin(this.time * 12.7) * 0.03);
     this.drawFlare(night, light.dim > 0);
     this.badgeClock += this.lastSeconds;
@@ -180,6 +194,15 @@ export class GameRenderer {
     this.world.scale.set(scale);
     this.world.position.set((screen.width - width * scale) / 2, (screen.height - height * scale) / 2);
     this.app.stage.hitArea = screen;
+
+    // Behind the title screen the Lighthouse stands to the right, leaving the left side dark for the menu.
+    if (this.cinematic) {
+      const { x, y } = this.state.map.lighthouse;
+      this.world.position.set(screen.width * CINEMATIC_X - x * scale, screen.height / 2 - y * scale);
+
+      return;
+    }
+
     this.clampCamera();
   }
 

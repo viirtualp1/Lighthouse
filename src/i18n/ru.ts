@@ -212,7 +212,20 @@ const ru: typeof en = {
     popReason: 'В городе осталось меньше {n} человек.',
     restart: 'Начать заново'
   },
+  mainMenu: {
+    kicker: 'Выживание у последнего света',
+    title: 'Маяк',
+    tagline: 'Удержите свет двадцать ночей.',
+    continue: 'Продолжить',
+    newGame: 'Новая игра',
+    confirmNew: 'Начать заново? Нажмите ещё раз',
+    settings: 'Настройки',
+    controls: 'Управление',
+    footer: 'Прототип'
+  },
   menu: {
+    mainMenu: 'Главное меню',
+    confirmShort: 'Точно?',
     label: 'Меню',
     open: 'Меню · Esc',
     title: 'Пауза',

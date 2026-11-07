@@ -1,40 +1,18 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { Volume2, VolumeX } from '@lucide/vue';
 import { useI18n } from 'vue-i18n';
 import { GAME } from '@/game/config';
-import { LOCALES } from '@/i18n';
+import ControlsList from './ControlsList.vue';
+import SettingsPanel from './SettingsPanel.vue';
 import { useGame } from './useGame';
-import { useSettings } from './useSettings';
 import { useTutorial } from './useTutorial';
-
-const CONTROLS = [
-  ['menu.keyNames.space', 'menu.keys.pause'],
-  ['1 · 2 · 3', 'menu.keys.speed'],
-  ['Q · E', 'menu.keys.rotate'],
-  ['menu.keyNames.wheel', 'menu.keys.zoom'],
-  ['menu.keyNames.drag', 'menu.keys.pan'],
-  ['menu.keyNames.rmb', 'menu.keys.cancel'],
-  ['Esc', 'menu.keys.escape']
-] as const;
 
 const game = useGame();
 const tutorial = useTutorial();
-const settings = useSettings();
-const { t, te } = useI18n();
+const { t } = useI18n();
 
 const confirmRestart = ref(false);
 const showControls = ref(false);
-
-function keyName (key: string) {
-  return te(key) ? t(key) : key;
-}
-
-function onVolume (event: Event) {
-  if (event.target instanceof HTMLInputElement) {
-    settings.changeVolume(Number(event.target.value) / 100);
-  }
-}
 
 function startTutorial () {
   game.closeMenu();
@@ -102,79 +80,30 @@ watch(game.menuOpen, open => {
             {{ t('menu.controls') }}
           </button>
 
-          <div class="mt-4 border-t border-snow/10 pt-4">
-            <div class="mb-2 flex items-center justify-between">
-              <span class="label">{{ t('menu.volume') }}</span>
-              <span class="num text-[13px] text-mist">{{ settings.muted.value ? '—' : Math.round(settings.volume.value * 100) }}</span>
-            </div>
-            <div class="flex items-center gap-3">
-              <button
-                class="hud-btn h-8 w-8 shrink-0"
-                :class="{ on: settings.muted.value }"
-                :aria-label="t('menu.sound')"
-                @click="settings.toggleMute()"
-              >
-                <VolumeX
-                  v-if="settings.muted.value"
-                  :size="14"
-                />
-                <Volume2
-                  v-else
-                  :size="14"
-                />
-              </button>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                :value="Math.round(settings.volume.value * 100)"
-                class="h-1 flex-1 cursor-pointer accent-snow"
-                :aria-label="t('menu.volume')"
-                @input="onVolume"
-              >
-            </div>
-          </div>
+          <SettingsPanel class="mt-4 border-t border-snow/10 pt-4" />
 
-          <div class="mt-4">
-            <div class="label mb-2">
-              {{ t('menu.language') }}
-            </div>
-            <div class="grid grid-cols-2 gap-1.5">
-              <button
-                v-for="locale in LOCALES"
-                :key="locale.id"
-                class="hud-btn h-9 text-sm normal-case tracking-normal"
-                :class="{ on: settings.locale.value === locale.id }"
-                @click="settings.changeLocale(locale.id)"
-              >
-                {{ locale.name }}
-              </button>
-            </div>
+          <div class="mt-5 grid grid-cols-2 gap-1.5">
+            <button
+              class="hud-btn h-11 text-sm"
+              @click="game.toMainMenu()"
+            >
+              {{ t('menu.mainMenu') }}
+            </button>
+            <button
+              class="hud-btn h-11 text-sm"
+              :class="confirmRestart ? 'border-danger text-danger' : ''"
+              @click="restart"
+            >
+              {{ confirmRestart ? t('menu.confirmShort') : t('menu.restart') }}
+            </button>
           </div>
-
-          <button
-            class="hud-btn mt-5 h-11 text-sm"
-            :class="confirmRestart ? 'border-danger text-danger' : ''"
-            @click="restart"
-          >
-            {{ confirmRestart ? t('menu.confirmRestart') : t('menu.restart') }}
-          </button>
         </div>
 
         <div
           v-else
           class="mt-6"
         >
-          <ul class="space-y-2">
-            <li
-              v-for="[key, action] in CONTROLS"
-              :key="action"
-              class="flex items-center justify-between gap-4 border-b border-snow/10 pb-2 whitespace-nowrap"
-            >
-              <span class="text-[14px] text-mist">{{ t(action) }}</span>
-              <span class="num rounded-[2px] border border-snow/20 px-2 py-0.5 text-[13px]">{{ keyName(key) }}</span>
-            </li>
-          </ul>
+          <ControlsList />
           <button
             class="hud-btn mt-5 h-11 w-full text-sm"
             @click="showControls = false"

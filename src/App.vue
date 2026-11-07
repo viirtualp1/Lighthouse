@@ -9,6 +9,7 @@ import HudAlerts from './ui/HudAlerts.vue';
 import HudLeft from './ui/HudLeft.vue';
 import HudTop from './ui/HudTop.vue';
 import LighthouseHud from './ui/LighthouseHud.vue';
+import MainMenu from './ui/MainMenu.vue';
 import MapView from './ui/MapView.vue';
 import PauseMenu from './ui/PauseMenu.vue';
 import PhaseBanner from './ui/PhaseBanner.vue';
@@ -21,7 +22,7 @@ const game = useGame();
 const generation = ref(0);
 
 function onKey (event: KeyboardEvent) {
-  if (game.menuOpen.value && event.code !== 'Escape') {
+  if (game.screen.value !== 'game' || (game.menuOpen.value && event.code !== 'Escape')) {
     return;
   }
 
@@ -67,7 +68,18 @@ onBeforeUnmount(() => {
 <template>
   <div class="relative h-full overflow-hidden">
     <MapView :key="generation" />
-    <div class="pointer-events-none absolute inset-0">
+    <Transition
+      enter-from-class="opacity-0"
+      enter-active-class="transition duration-500"
+      leave-to-class="opacity-0"
+      leave-active-class="transition duration-300"
+    >
+      <MainMenu v-if="game.screen.value === 'menu'" />
+    </Transition>
+    <div
+      v-if="game.screen.value === 'game'"
+      class="pointer-events-none absolute inset-0"
+    >
       <PhaseBanner />
       <HudTop />
       <HudLeft />
@@ -82,6 +94,6 @@ onBeforeUnmount(() => {
       <EndModal />
       <PauseMenu />
     </div>
-    <TutorialOverlay />
+    <TutorialOverlay v-if="game.screen.value === 'game'" />
   </div>
 </template>

@@ -210,7 +210,20 @@ export default {
     popReason: 'Fewer than {n} people are left in town.',
     restart: 'Start over'
   },
+  mainMenu: {
+    kicker: 'A survival town-builder',
+    title: 'The Lighthouse',
+    tagline: 'Keep the light burning for twenty nights.',
+    continue: 'Continue',
+    newGame: 'New game',
+    confirmNew: 'Start over? Click again',
+    settings: 'Settings',
+    controls: 'Controls',
+    footer: 'Prototype'
+  },
   menu: {
+    mainMenu: 'Main menu',
+    confirmShort: 'Sure?',
     label: 'Menu',
     open: 'Menu · Esc',
     title: 'Paused',

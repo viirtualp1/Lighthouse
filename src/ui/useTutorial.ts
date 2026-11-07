@@ -128,7 +128,7 @@ export function useTutorial () {
   }
 
   function startIfNew () {
-    if (!readDone()) {
+    if (index.value === null && !readDone()) {
       start();
     }
   }

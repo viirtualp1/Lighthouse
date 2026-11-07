@@ -18,12 +18,17 @@ export interface Banner {
 const UI_REFRESH_SECONDS = 0.1;
 const BEAM_STEP = Math.PI / 18;
 const SHADOW_NEAR = 0.7;
+const MENU_DREAD = 0.2;
 
 const state = shallowRef(createState());
-const view = reactive<ViewState>({ hoverSlot: null, pointer: null, selectedId: null, placing: null, aiming: false, highlight: null, previewLens: false });
+const view = reactive<ViewState>({ hoverSlot: null, pointer: null, selectedId: null, placing: null, aiming: false, highlight: null, previewLens: false, cinematic: true });
 const screenPointer = ref<Point | null>(null);
 const banner = ref<Banner | null>(null);
 const menuOpen = ref(false);
+/** The title screen shows first; the town waits behind it, paused, as a night backdrop. */
+const screen = ref<'menu' | 'game'>('menu');
+/** Whether a game has been started this visit, so the title screen can offer to continue it. */
+const hasGame = ref(false);
 /** Set by the map once it is drawn; lets HUD overlays point at things on the map. */
 const projector = shallowRef<((point: Point) => { x: number; y: number; scale: number }) | null>(null);
 const restartListeners: (() => void)[] = [];
@@ -64,8 +69,9 @@ function dread () {
 
 function frame (seconds: number) {
   const s = state.value;
+  const playing = screen.value === 'game';
 
-  if (s.speed > 0 && s.status === 'playing' && !s.dawnReport) {
+  if (playing && s.speed > 0 && s.status === 'playing' && !s.dawnReport) {
     sim.advance(s, (seconds / GAME.secondsPerHour) * s.speed);
   }
 
@@ -76,7 +82,7 @@ function frame (seconds: number) {
     showBanner(effects);
   }
 
-  updateAmbience(sim.nightness(s), dread());
+  updateAmbience(playing ? sim.nightness(s) : 1, playing ? dread() : MENU_DREAD);
   sinceRefresh += seconds;
 
   if (sinceRefresh >= UI_REFRESH_SECONDS || effects.length) {
@@ -94,6 +100,10 @@ function hover (slot: number | null, point: Point | null, screen: Point | null) 
 
 function press (slot: number | null, point: Point) {
   const s = state.value;
+
+  if (screen.value !== 'game') {
+    return;
+  }
 
   if (view.aiming) {
     const { x, y } = s.map.lighthouse;
@@ -215,6 +225,10 @@ function closeMenu () {
 
 /** Esc backs out one level at a time: a placement or aim first, then a selection, and only then the menu. */
 function escape () {
+  if (screen.value !== 'game') {
+    return;
+  }
+
   if (menuOpen.value) {
     closeMenu();
   } else if (view.placing || view.aiming) {
@@ -236,6 +250,34 @@ function restart () {
   restartListeners.forEach(listener => listener());
 }
 
+function newGame () {
+  restart();
+  hasGame.value = true;
+  screen.value = 'game';
+  view.cinematic = false;
+  setSpeed(1);
+}
+
+function continueGame () {
+  screen.value = 'game';
+  view.cinematic = false;
+  menuOpen.value = false;
+  setSpeed(speedBeforeMenu);
+}
+
+function toMainMenu () {
+  if (!menuOpen.value) {
+    speedBeforeMenu = state.value.speed;
+  }
+
+  menuOpen.value = false;
+  cancel();
+  view.selectedId = null;
+  screen.value = 'menu';
+  view.cinematic = true;
+  setSpeed(0);
+}
+
 function onRestart (listener: () => void) {
   restartListeners.push(listener);
 }
@@ -247,6 +289,11 @@ export function useGame () {
     screenPointer,
     banner,
     menuOpen,
+    screen,
+    hasGame,
+    newGame,
+    continueGame,
+    toMainMenu,
     projector,
     openMenu,
     closeMenu,
@@ -273,3 +320,4 @@ export function useGame () {
 }
 
 computeLight(state.value);
+state.value.speed = 0;
