@@ -24,6 +24,8 @@ const view = reactive<ViewState>({ hoverSlot: null, pointer: null, selectedId: n
 const screenPointer = ref<Point | null>(null);
 const banner = ref<Banner | null>(null);
 const menuOpen = ref(false);
+/** Set by the map once it is drawn; lets HUD overlays point at things on the map. */
+const projector = shallowRef<((point: Point) => { x: number; y: number; scale: number }) | null>(null);
 const restartListeners: (() => void)[] = [];
 let sinceRefresh = 0;
 let bannerId = 0;
@@ -244,6 +246,7 @@ export function useGame () {
     screenPointer,
     banner,
     menuOpen,
+    projector,
     openMenu,
     closeMenu,
     escape,

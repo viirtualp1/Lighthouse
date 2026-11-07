@@ -123,6 +123,14 @@ export class GameRenderer {
     this.app.destroy(true, { children: true, texture: true });
   }
 
+  /** Where a map point is on screen, and how many screen pixels one map pixel takes, for HUD overlays. */
+  toScreen (point: Point) {
+    const p = this.world.toGlobal(point);
+    const box = this.app.canvas.getBoundingClientRect();
+
+    return { x: box.left + p.x, y: box.top + p.y, scale: this.world.scale.x };
+  }
+
   draw (view: ViewState, effects: Effect[]) {
     const state = this.state;
     const signature = `${state.revision}:${state.buildings.map(b => b.workers).join(',')}`;

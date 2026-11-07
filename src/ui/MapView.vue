@@ -98,9 +98,11 @@ onMounted(async () => {
   });
 
   await renderer.mount(host.value!);
+  game.projector.value = point => renderer!.toScreen(point);
 });
 
 onBeforeUnmount(() => {
+  game.projector.value = null;
   renderer?.destroy();
   renderer = null;
 });

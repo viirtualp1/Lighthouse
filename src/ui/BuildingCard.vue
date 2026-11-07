@@ -54,6 +54,7 @@ function close () {
   <section
     v-if="card"
     class="plate pointer-events-auto w-80 p-4"
+    data-tour="building-card"
   >
     <header class="flex items-start justify-between gap-2">
       <div>
