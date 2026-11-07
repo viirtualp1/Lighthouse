@@ -217,7 +217,7 @@ const ru: typeof en = {
     continue: 'Продолжить',
     newGame: 'Новая игра',
     quit: 'Выйти',
-    confirmNew: 'Начать заново? Нажмите ещё раз',
+    confirmNew: 'Точно? Ещё раз',
     settings: 'Настройки',
     controls: 'Управление',
     footer: 'Прототип'

@@ -215,7 +215,7 @@ export default {
     continue: 'Continue',
     newGame: 'New game',
     quit: 'Quit',
-    confirmNew: 'Start over? Click again',
+    confirmNew: 'Sure? Click again',
     settings: 'Settings',
     controls: 'Controls',
     footer: 'Prototype'

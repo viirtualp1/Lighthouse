@@ -37,13 +37,13 @@ function toggle (next: Exclude<Panel, null>) {
 
 <template>
   <div class="pointer-events-auto absolute inset-0 z-30 flex items-center bg-[linear-gradient(90deg,rgba(0,0,0,0.88)_0%,rgba(0,0,0,0.55)_38%,rgba(0,0,0,0)_70%)]">
-    <div class="ml-[8vw] flex items-center gap-14">
-      <div class="flex w-[420px] flex-col">
-        <h1 class="display text-8xl leading-[0.9] text-snow drop-shadow-[0_6px_30px_rgba(0,0,0,0.8)]">
-          {{ t('mainMenu.title') }}
-        </h1>
+    <div class="ml-[8vw] flex flex-col">
+      <h1 class="display text-8xl leading-none whitespace-nowrap text-snow drop-shadow-[0_6px_30px_rgba(0,0,0,0.8)]">
+        {{ t('mainMenu.title') }}
+      </h1>
 
-        <nav class="mt-12 flex flex-col items-start gap-1">
+      <div class="mt-12 flex items-start gap-10">
+        <nav class="flex w-72 shrink-0 flex-col items-start gap-1">
           <button
             v-if="canContinue"
             class="menu-item"
@@ -80,27 +80,27 @@ function toggle (next: Exclude<Panel, null>) {
             {{ t('mainMenu.quit') }}
           </button>
         </nav>
-      </div>
 
-      <Transition
-        enter-from-class="opacity-0 -translate-x-3"
-        enter-active-class="transition duration-200"
-        leave-to-class="opacity-0"
-        leave-active-class="transition duration-150"
-        mode="out-in"
-      >
-        <section
-          v-if="panel"
-          :key="panel"
-          class="plate mt-40 w-[360px] px-6 py-5"
+        <Transition
+          enter-from-class="opacity-0 -translate-x-3"
+          enter-active-class="transition duration-200"
+          leave-to-class="opacity-0"
+          leave-active-class="transition duration-150"
+          mode="out-in"
         >
-          <h2 class="display mb-4 text-3xl leading-none">
-            {{ panel === 'settings' ? t('mainMenu.settings') : t('mainMenu.controls') }}
-          </h2>
-          <SettingsPanel v-if="panel === 'settings'" />
-          <ControlsList v-else />
-        </section>
-      </Transition>
+          <section
+            v-if="panel"
+            :key="panel"
+            class="plate w-[360px] px-6 py-5"
+          >
+            <h2 class="display mb-4 text-3xl leading-none">
+              {{ panel === 'settings' ? t('mainMenu.settings') : t('mainMenu.controls') }}
+            </h2>
+            <SettingsPanel v-if="panel === 'settings'" />
+            <ControlsList v-else />
+          </section>
+        </Transition>
+      </div>
     </div>
 
     <span class="label absolute bottom-6 left-[8vw] text-fog">{{ t('mainMenu.footer') }}</span>
@@ -117,6 +117,7 @@ function toggle (next: Exclude<Panel, null>) {
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: rgb(242 244 245 / 0.62);
+  white-space: nowrap;
   cursor: pointer;
   transition:
     color 0.15s,

@@ -22,6 +22,8 @@ const ICON_SIZE = 1024;
 const DMG = { width: 660, height: 400 };
 const APP_SLOT = { x: 150, y: 200 };
 const APPLICATIONS_SLOT = { x: 510, y: 200 };
+/** Where Finder puts the label's centre below a 96-pixel icon. */
+const LABEL_OFFSET = 63;
 
 /** Pairs of eyes in the dark around the installer, some wide open, some half shut. */
 const EYES: Eye[] = [
@@ -145,11 +147,22 @@ function dmgSvg () {
   <path d="M0 ${height - 36} Q ${width * 0.3} ${height - 54} ${width / 2} ${height - 42} T ${width} ${height - 40}" fill="none" stroke="${SNOW}" stroke-opacity="0.12" stroke-width="1" stroke-dasharray="40 18"/>
   <ellipse cx="${foot.x + 4}" cy="${foot.y + 4}" rx="${40 * scale}" ry="${10 * scale}" fill="#000" opacity="0.5"/>
   <g transform="translate(${foot.x} ${foot.y - 16 * scale}) scale(${scale})">${lighthouse(1.3)}</g>
+  ${[APP_SLOT, APPLICATIONS_SLOT].map(labelPlate).join('')}
   <g fill="none" stroke="${WARM}" stroke-opacity="0.55" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <path d="M${APPLICATIONS_SLOT.x - 92} ${APPLICATIONS_SLOT.y + 64} l8 -8 -8 -8"/>
     <path d="M${APPLICATIONS_SLOT.x - 80} ${APPLICATIONS_SLOT.y + 64} l8 -8 -8 -8" stroke-opacity="0.3"/>
   </g>
 </svg>`;
+}
+
+/**
+ * Finder draws icon labels in the system's text colour, black in light mode and white in dark mode, and a DMG cannot
+ * change it. A mid-grey plate under each label keeps either colour readable on the night background.
+ */
+function labelPlate (slot: { x: number; y: number }) {
+  const y = slot.y + LABEL_OFFSET;
+
+  return `<rect x="${slot.x - 70}" y="${y - 12}" width="140" height="24" rx="5" fill="#808991" fill-opacity="0.92" stroke="${SNOW}" stroke-opacity="0.25"/>`;
 }
 
 function png (svg: string, width: number) {
