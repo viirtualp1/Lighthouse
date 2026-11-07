@@ -59,6 +59,9 @@ export default {
     reachFull: 'Light at full strength',
     reachShort: 'Light 40% shorter',
     lens: 'Lens · {n} iron',
+    lensName: 'Lens',
+    lensGain: '+1 ring of light, same oil',
+    lensWhere: 'Iron: salvage the wrecks on the shore',
     lensHint: 'The light reaches one ring further for the same oil'
   },
   supplies: {

@@ -23,6 +23,8 @@ export interface ViewState {
   aiming: boolean;
   /** A spot on the map the tutorial points at. */
   highlight: Point | null;
+  /** The player is hovering the Lens upgrade: show how far the light would reach with it. */
+  previewLens: boolean;
 }
 
 export interface RendererEvents {
@@ -487,11 +489,33 @@ export class GameRenderer {
     }
   }
 
+  /** The light's reach with the Lens fitted, drawn in white over the current warm zones so the gain stands out. */
+  private drawLensPreview (g: Graphics) {
+    const p = lightParams(this.state, true, true);
+    const { x, y } = p.origin;
+    const pulse = 0.6 + Math.sin(this.time * 4) * 0.25;
+
+    if (p.dim > 0) {
+      g.circle(x, y, p.lit).stroke({ width: 2.5, color: PALETTE.white, alpha: pulse });
+      this.dashedCircle(g, x, y, p.dim, 9);
+      g.stroke({ width: 1.6, color: PALETTE.white, alpha: pulse * 0.7 });
+    }
+
+    if (p.beamLength > 0) {
+      g.moveTo(x, y).arc(x, y, p.beamLength, p.beamAngle - p.beamHalfArc, p.beamAngle + p.beamHalfArc).closePath()
+        .stroke({ width: 2.5, color: PALETTE.white, alpha: pulse });
+    }
+  }
+
   private drawOverlay (view: ViewState) {
     const g = this.overlay;
     const state = this.state;
     const pulse = 0.65 + Math.sin(this.time * 4) * 0.25;
     g.clear();
+
+    if (view.previewLens && !state.lens) {
+      this.drawLensPreview(g);
+    }
 
     if (view.highlight) {
       const r = 46 + Math.sin(this.time * 4) * 6;

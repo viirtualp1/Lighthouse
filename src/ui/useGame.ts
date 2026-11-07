@@ -20,7 +20,7 @@ const BEAM_STEP = Math.PI / 18;
 const SHADOW_NEAR = 0.7;
 
 const state = shallowRef(createState());
-const view = reactive<ViewState>({ hoverSlot: null, pointer: null, selectedId: null, placing: null, aiming: false, highlight: null });
+const view = reactive<ViewState>({ hoverSlot: null, pointer: null, selectedId: null, placing: null, aiming: false, highlight: null, previewLens: false });
 const screenPointer = ref<Point | null>(null);
 const banner = ref<Banner | null>(null);
 const menuOpen = ref(false);
@@ -173,6 +173,7 @@ function demolish (id: number) {
 
 function buyLens () {
   sim.buyLens(state.value);
+  view.previewLens = false;
   refresh();
 }
 

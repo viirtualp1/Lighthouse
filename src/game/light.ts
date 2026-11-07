@@ -46,11 +46,14 @@ export function lighthouseReach (state: GameState) {
   return keepers >= 2 ? 1 : GAME.keeperlessReach;
 }
 
-/** `planned` describes the light the coming night will have, so it can be shown by day too. */
-export function lightParams (state: GameState, planned = false): LightParams {
+/**
+ * `planned` describes the light the coming night will have, so it can be shown by day too; `withLens` overrides
+ * whether the Lens is fitted, to preview what buying it would give.
+ */
+export function lightParams (state: GameState, planned = false, withLens = state.lens): LightParams {
   const burning = planned ? state.mode !== 'off' : lighthouseBurning(state);
   const reach = lighthouseReach(state) * UNIT;
-  const lens = state.lens ? LIGHT.lens : 0;
+  const lens = withLens ? LIGHT.lens : 0;
   const lanternsOn = planned || (state.phase !== 'day' && state.resources.oil > 0);
 
   const params: LightParams = {

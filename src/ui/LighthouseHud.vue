@@ -135,12 +135,24 @@ const supply = computed(() => {
       </div>
       <button
         v-if="!s.lens"
-        class="hud-btn h-8 px-3 whitespace-nowrap"
-        :disabled="s.resources.iron < GAME.lensIron"
-        :title="t('lighthouse.lensHint')"
-        @click="game.buyLens()"
+        class="hud-btn h-auto flex-col items-start gap-0 px-3 py-1.5 text-left whitespace-nowrap normal-case tracking-normal"
+        :class="{ 'opacity-60': s.resources.iron < GAME.lensIron }"
+        @mouseenter="game.view.previewLens = true"
+        @mouseleave="game.view.previewLens = false"
+        @click="s.resources.iron >= GAME.lensIron && game.buyLens()"
       >
-        <ResourceIcon id="iron" />{{ t('lighthouse.lens', { n: GAME.lensIron }) }}
+        <span class="flex items-center gap-1.5 text-[13px] font-medium uppercase tracking-[0.08em]">
+          {{ t('lighthouse.lensName') }}
+          <span
+            class="num flex items-center gap-0.5 normal-case"
+            :class="s.resources.iron < GAME.lensIron ? 'text-danger' : 'text-snow'"
+          ><ResourceIcon id="iron" />{{ GAME.lensIron }}</span>
+        </span>
+        <span class="text-[11px] text-mist">{{ t('lighthouse.lensGain') }}</span>
+        <span
+          v-if="s.resources.iron < GAME.lensIron"
+          class="text-[11px] text-danger"
+        >{{ t('lighthouse.lensWhere') }}</span>
       </button>
     </div>
   </section>
