@@ -211,11 +211,10 @@ export default {
     restart: 'Start over'
   },
   mainMenu: {
-    kicker: 'A survival town-builder',
     title: 'The Lighthouse',
-    tagline: 'Keep the light burning for twenty nights.',
     continue: 'Continue',
     newGame: 'New game',
+    quit: 'Quit',
     confirmNew: 'Start over? Click again',
     settings: 'Settings',
     controls: 'Controls',
@@ -223,6 +222,7 @@ export default {
   },
   menu: {
     mainMenu: 'Main menu',
+    fullscreen: 'Fullscreen',
     confirmShort: 'Sure?',
     label: 'Menu',
     open: 'Menu · Esc',

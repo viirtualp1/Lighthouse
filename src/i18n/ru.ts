@@ -213,11 +213,10 @@ const ru: typeof en = {
     restart: 'Начать заново'
   },
   mainMenu: {
-    kicker: 'Выживание у последнего света',
     title: 'Маяк',
-    tagline: 'Удержите свет двадцать ночей.',
     continue: 'Продолжить',
     newGame: 'Новая игра',
+    quit: 'Выйти',
     confirmNew: 'Начать заново? Нажмите ещё раз',
     settings: 'Настройки',
     controls: 'Управление',
@@ -225,6 +224,7 @@ const ru: typeof en = {
   },
   menu: {
     mainMenu: 'Главное меню',
+    fullscreen: 'Полный экран',
     confirmShort: 'Точно?',
     label: 'Меню',
     open: 'Меню · Esc',

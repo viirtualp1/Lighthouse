@@ -7,6 +7,8 @@ import { useGame } from './useGame';
 
 type Panel = 'settings' | 'controls' | null;
 
+const desktop = window.desktop;
+
 const game = useGame();
 const { t } = useI18n();
 
@@ -37,13 +39,9 @@ function toggle (next: Exclude<Panel, null>) {
   <div class="pointer-events-auto absolute inset-0 z-30 flex items-center bg-[linear-gradient(90deg,rgba(0,0,0,0.88)_0%,rgba(0,0,0,0.55)_38%,rgba(0,0,0,0)_70%)]">
     <div class="ml-[8vw] flex items-center gap-14">
       <div class="flex w-[420px] flex-col">
-        <span class="label text-warm/80">{{ t('mainMenu.kicker') }}</span>
-        <h1 class="display mt-2 text-8xl leading-[0.9] text-snow drop-shadow-[0_6px_30px_rgba(0,0,0,0.8)]">
+        <h1 class="display text-8xl leading-[0.9] text-snow drop-shadow-[0_6px_30px_rgba(0,0,0,0.8)]">
           {{ t('mainMenu.title') }}
         </h1>
-        <p class="mt-4 text-[17px] text-mist">
-          {{ t('mainMenu.tagline') }}
-        </p>
 
         <nav class="mt-12 flex flex-col items-start gap-1">
           <button
@@ -73,6 +71,13 @@ function toggle (next: Exclude<Panel, null>) {
             @click="toggle('controls')"
           >
             {{ t('mainMenu.controls') }}
+          </button>
+          <button
+            v-if="desktop"
+            class="menu-item mt-4"
+            @click="desktop.quit()"
+          >
+            {{ t('mainMenu.quit') }}
           </button>
         </nav>
       </div>

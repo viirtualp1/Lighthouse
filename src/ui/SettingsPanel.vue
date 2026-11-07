@@ -4,6 +4,8 @@ import { useI18n } from 'vue-i18n';
 import { LOCALES } from '@/i18n';
 import { useSettings } from './useSettings';
 
+const desktop = window.desktop;
+
 const settings = useSettings();
 const { t } = useI18n();
 
@@ -48,6 +50,14 @@ function onVolume (event: Event) {
         >
       </div>
     </div>
+
+    <button
+      v-if="desktop"
+      class="hud-btn h-9 text-sm"
+      @click="desktop.toggleFullscreen()"
+    >
+      {{ t('menu.fullscreen') }} · F11
+    </button>
 
     <div>
       <div class="label mb-2">

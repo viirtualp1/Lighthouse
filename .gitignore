@@ -3,3 +3,6 @@ dist
 .vercel
 .env*
 .claude
+dist-desktop
+dist-electron
+release

@@ -1,0 +1,25 @@
+appId: com.viirtualp1.lighthouse
+productName: The Lighthouse
+directories:
+  output: release
+files:
+  - dist-desktop/**
+  - dist-electron/**
+  - package.json
+  # The game is bundled by Vite; the app needs no node_modules at runtime.
+  - '!node_modules/**'
+asar: true
+npmRebuild: false
+mac:
+  category: public.app-category.strategy-games
+  target:
+    - dir
+    - dmg
+win:
+  target:
+    - dir
+    - nsis
+linux:
+  target:
+    - dir
+    - AppImage
