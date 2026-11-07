@@ -33,8 +33,11 @@ function angleDelta (a: number, b: number) {
   return d > Math.PI ? Math.PI * 2 - d : d;
 }
 
+/** The lamp burns through dusk and night, and keeps burning over the first morning hour while the Shadow draws back. */
 export function lighthouseBurning (state: GameState) {
-  return state.mode !== 'off' && state.resources.oil > 0 && state.phase !== 'day';
+  const morning = state.day > 1 && state.hour < GAME.dawnHours;
+
+  return state.mode !== 'off' && state.resources.oil > 0 && (state.phase !== 'day' || morning);
 }
 
 export function lighthouseReach (state: GameState) {
@@ -119,7 +122,7 @@ export function tonightRisk (state: GameState, x: number, y: number) {
 }
 
 export function computeLight (state: GameState) {
-  if (state.phase === 'day') {
+  if (state.phase === 'day' && !lighthouseBurning(state)) {
     state.light.fill(LIT);
 
     return;

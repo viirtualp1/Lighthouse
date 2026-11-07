@@ -97,13 +97,13 @@ function arc (from: number, to: number) {
       />
     </svg>
 
-    <div class="flex flex-col gap-1 whitespace-nowrap">
+    <div class="flex w-[170px] flex-col gap-1 whitespace-nowrap">
       <div class="flex items-baseline gap-2.5">
         <span class="num text-2xl leading-none">{{ clockOf(s.hour) }}</span>
         <span class="display text-xl leading-none">{{ t(`phase.${s.phase}`) }} {{ Math.min(s.day, GAME.daysToWin) }}</span>
         <span class="label">{{ t('top.of', { total: GAME.daysToWin }) }}</span>
       </div>
-      <span class="label text-[10px]">{{ untilNight }} · {{ t('top.nightLength', { h: nightHours(s) }) }}</span>
+      <span class="label text-[10px]">{{ untilNight }}</span>
     </div>
 
     <div class="h-10 w-px bg-snow/15" />

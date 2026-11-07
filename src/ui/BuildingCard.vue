@@ -104,8 +104,8 @@ function formatAmount (amount: number) {
     class="plate pointer-events-auto w-80 p-4"
     data-tour="building-card"
   >
-    <header class="flex items-start justify-between gap-2">
-      <div>
+    <header class="flex items-start gap-2">
+      <div class="min-w-0 flex-1">
         <h2 class="display text-3xl leading-none">
           {{ t(`buildings.${card.building.type}.name`) }}
         </h2>
@@ -113,6 +113,14 @@ function formatAmount (amount: number) {
           {{ t(`buildings.${card.building.type}.hint`) }}
         </p>
       </div>
+      <button
+        class="hud-btn h-7 w-7 shrink-0 border-transparent text-mist hover:text-danger"
+        :title="t('card.demolish')"
+        :aria-label="t('card.demolish')"
+        @click="game.demolish(card.building.id)"
+      >
+        <Trash :size="14" />
+      </button>
       <button
         class="hud-btn h-7 w-7 shrink-0 border-transparent"
         :aria-label="t('card.close')"
@@ -124,60 +132,60 @@ function formatAmount (amount: number) {
 
     <div
       v-if="card.def.maxWorkers"
-      class="mt-4"
+      class="mt-4 flex items-center gap-2"
     >
-      <div class="mb-2 flex items-baseline justify-between">
-        <span class="label">{{ t('card.workers') }}</span>
-        <span class="num text-[12px] text-mist">{{ t('card.free', { n: card.free }) }}</span>
-      </div>
-      <div class="flex items-center gap-2">
+      <button
+        class="hud-btn h-8 w-8"
+        @click="game.setWorkers(card.building.id, card.building.workers - 1)"
+      >
+        <Minus :size="13" />
+      </button>
+      <div
+        class="flex flex-1 justify-center gap-0.5"
+        :title="t('card.free', { n: card.free })"
+      >
         <button
-          class="hud-btn h-8 w-8"
-          @click="game.setWorkers(card.building.id, card.building.workers - 1)"
+          v-for="(filled, i) in card.slots"
+          :key="i"
+          class="grid h-8 w-8 cursor-pointer place-items-center rounded-[2px] transition-colors hover:bg-snow/10"
+          @click="setTo(i)"
         >
-          <Minus :size="13" />
-        </button>
-        <div class="flex flex-1 justify-center gap-0.5">
-          <button
-            v-for="(filled, i) in card.slots"
-            :key="i"
-            class="grid h-8 w-8 cursor-pointer place-items-center rounded-[2px] transition-colors hover:bg-snow/10"
-            @click="setTo(i)"
-          >
-            <User
-              :size="20"
-              :stroke-width="1.6"
-              :class="filled ? 'fill-snow text-snow' : 'text-snow/30'"
-            />
-          </button>
-        </div>
-        <button
-          class="hud-btn h-8 w-8"
-          @click="game.setWorkers(card.building.id, card.building.workers + 1)"
-        >
-          <Plus :size="13" />
+          <User
+            :size="20"
+            :stroke-width="1.6"
+            :class="filled ? 'fill-snow text-snow' : 'text-snow/30'"
+          />
         </button>
       </div>
+      <button
+        class="hud-btn h-8 w-8"
+        :disabled="card.free <= 0"
+        @click="game.setWorkers(card.building.id, card.building.workers + 1)"
+      >
+        <Plus :size="13" />
+      </button>
     </div>
 
     <div
       v-if="card.outputs.length"
-      class="mt-4 flex items-center justify-between border-t border-snow/10 pt-3"
+      class="mt-4 flex items-center gap-4 border-t border-snow/10 pt-3"
     >
-      <span class="label">{{ t('card.output') }}</span>
-      <span class="flex items-center gap-3">
-        <span
-          v-for="o in card.outputs"
-          :key="o.id"
-          class="num flex items-center gap-1 text-[15px]"
-          :class="o.amount < 0 ? 'text-danger' : 'text-snow'"
-        >
-          <ResourceIcon
-            :id="o.id"
-            :size="15"
-          />{{ formatAmount(o.amount) }}{{ t('supplies.perHour') }}
-        </span>
+      <span
+        v-for="o in card.outputs"
+        :key="o.id"
+        class="num flex items-center gap-1.5 text-[16px]"
+        :class="o.amount < 0 ? 'text-danger' : 'text-snow'"
+      >
+        <ResourceIcon
+          :id="o.id"
+          :size="16"
+        />{{ formatAmount(o.amount) }}{{ t('supplies.perHour') }}
       </span>
+      <span
+        v-if="card.eff.total < 100"
+        class="num ml-auto text-[13px] text-warm"
+        :title="`${t('card.efficiency')} · ${t('card.effLight')} ${card.eff.light}%${card.eff.fear ? ` · ${t('card.effFear')} −${card.eff.fear}%` : ''}`"
+      >{{ card.eff.total }}%</span>
     </div>
     <p
       v-if="card.note"
@@ -185,36 +193,18 @@ function formatAmount (amount: number) {
     >
       {{ card.note }}
     </p>
-
-    <div
-      v-if="card.def.maxWorkers && card.building.workers"
-      class="mt-2 flex items-center justify-between text-[12px]"
-    >
-      <span class="label">{{ t('card.efficiency') }}</span>
-      <span class="num text-mist">
-        <span :class="card.eff.total < 100 ? 'text-warm' : 'text-good'">{{ card.eff.total }}%</span>
-        · {{ t('card.effLight') }} {{ card.eff.light }}%<span v-if="card.eff.fear"> · {{ t('card.effFear') }} −{{ card.eff.fear }}%</span>
-      </span>
-    </div>
-
     <p
+      v-if="card.wreck !== null"
+      class="mt-2 flex items-center gap-1.5 text-[13px] text-mist"
+    >
+      <ResourceIcon id="iron" />{{ t('card.wreckLeft', { n: Math.floor(card.wreck) }) }}
+    </p>
+    <p
+      v-if="card.status.tone !== 'text-good'"
       class="mt-3 text-[13px]"
       :class="card.status.tone"
     >
       {{ card.status.text }}
     </p>
-    <p
-      v-if="card.wreck !== null"
-      class="mt-1 text-[13px] text-mist"
-    >
-      <ResourceIcon id="iron" /> {{ t('card.wreckLeft', { n: Math.floor(card.wreck) }) }}
-    </p>
-
-    <button
-      class="hud-btn mt-4 h-8 w-full text-danger"
-      @click="game.demolish(card.building.id)"
-    >
-      <Trash :size="13" />{{ t('card.demolish') }}
-    </button>
   </section>
 </template>

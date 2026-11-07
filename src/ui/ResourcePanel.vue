@@ -124,9 +124,6 @@ function formatRate (rate: number) {
       </ul>
     </div>
 
-    <div class="label mb-2">
-      {{ t('supplies.title') }}
-    </div>
     <ul class="space-y-1">
       <li
         v-for="row in resources"
@@ -141,16 +138,14 @@ function formatRate (rate: number) {
         />
         <span class="flex-1 text-[15px] text-mist">{{ row.name }}</span>
         <span
-          class="num text-[13px]"
+          class="num min-w-14 text-right text-[13px]"
           :class="row.tone"
         >{{ row.note }}</span>
         <span class="num w-12 text-right text-2xl leading-none">{{ row.value }}</span>
       </li>
     </ul>
 
-    <div class="label mt-4 mb-2 border-t border-snow/10 pt-3">
-      {{ t('supplies.town') }}
-    </div>
+    <div class="my-3 border-t border-snow/10" />
     <ul class="space-y-2">
       <li
         v-for="row in people"
@@ -165,7 +160,7 @@ function formatRate (rate: number) {
         />
         <span class="flex-1 text-[15px] text-mist">{{ row.name }}</span>
         <span
-          class="num text-[13px]"
+          class="num min-w-14 text-right text-[13px]"
           :class="row.tone"
         >{{ row.note }}</span>
         <span class="num w-12 text-right text-2xl leading-none">{{ row.value }}</span>

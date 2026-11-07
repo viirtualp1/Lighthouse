@@ -8,6 +8,10 @@ export interface DarknessFrame {
   frontPx: number;
   night: number;
   time: number;
+  /** Direction of the Lighthouse's turning lamp; purely visual, the light's reach does not depend on it. */
+  sweep: number;
+  /** The lamp's brightness wobble, around 1. */
+  flicker: number;
 }
 
 interface DarknessUniforms {
@@ -22,6 +26,8 @@ interface DarknessUniforms {
   uNight: number;
   uTime: number;
   uUnit: number;
+  uSweep: number;
+  uFlicker: number;
 }
 
 /** How far past the map's edge the darkness reaches, so zooming out never shows its border. */
@@ -58,6 +64,8 @@ uniform float uFront;
 uniform float uNight;
 uniform float uTime;
 uniform float uUnit;
+uniform float uSweep;
+uniform float uFlicker;
 
 float hash(vec2 p) {
   return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
@@ -134,11 +142,37 @@ void main() {
   float ambient = uNight * (0.14 + (1.0 - light) * 0.5);
   float alpha = clamp(max(ambient, cover * (0.9 + slow * 0.1)), 0.0, 1.0);
 
+  vec2 d = p - uOrigin;
+  float dist = length(d);
+  float angle = atan(d.y, d.x);
+  float reachPx = max(uLight.y, 1.0);
+
+  // A lighthouse lamp turns: a soft blade of light sweeps the ground, reaching a little past the steady light.
+  float sweepOn = (uLight.y > 0.0 && uLight.z <= 0.0) ? 1.0 : 0.0;
+  float sweepAcross = 1.0 - smoothstep(0.0, 0.3, angleDelta(angle, uSweep));
+  float trail = 1.0 - smoothstep(0.0, 0.9, angleDelta(angle, uSweep - 0.35));
+  float sweepAlong = (1.0 - smoothstep(reachPx * 0.75, reachPx * 1.55, dist)) * smoothstep(12.0, 70.0, dist);
+  float sweep = sweepOn * sweepAlong * (sweepAcross + trail * 0.25);
+
+  // God rays: slow streaks fanning out from the lamp, only where there is light to carry them.
+  float rays = noise(vec2(angle * 9.0, t * 0.12)) * noise(vec2(angle * 21.0 + 4.0, -t * 0.09));
+  float rayMask = light * smoothstep(20.0, 140.0, dist) * (1.0 - smoothstep(reachPx * 0.6, reachPx * 1.1, dist));
+
+  // Where the light holds the Shadow back, its edge glows faintly, as if burning.
+  float rim = smoothstep(0.08, 0.45, cover) * (1.0 - smoothstep(0.45, 0.95, cover)) * (0.7 + fast * 0.6);
+
+  alpha *= 1.0 - sweep * 0.5 * uNight;
+
   vec3 tint = mix(vec3(0.016, 0.022, 0.034), vec3(0.0), cover);
   vec3 color = tint * alpha;
 
-  float warmth = uNight * (light * 0.06 + beam * 0.08 * (0.8 + fast * 0.4));
-  color += vec3(1.0, 0.94, 0.82) * warmth;
+  vec3 hot = vec3(1.0, 0.82, 0.55);
+  vec3 pale = vec3(1.0, 0.95, 0.86);
+  vec3 warm = mix(hot, pale, smoothstep(0.0, reachPx, dist));
+
+  float warmth = uNight * uFlicker * (light * 0.07 + beam * 0.09 * (0.8 + fast * 0.4) + sweep * 0.18 + rays * rayMask * 0.12);
+  color += warm * warmth;
+  color += hot * rim * 0.16 * uNight;
 
   if (cover > 0.85 && uNight > 0.3) {
     vec2 cell = floor(p / 120.0);
@@ -185,7 +219,9 @@ export function createDarkness (width: number, height: number) {
         uFront: { value: 0, type: 'f32' },
         uNight: { value: 0, type: 'f32' },
         uTime: { value: 0, type: 'f32' },
-        uUnit: { value: UNIT, type: 'f32' }
+        uUnit: { value: UNIT, type: 'f32' },
+        uSweep: { value: 0, type: 'f32' },
+        uFlicker: { value: 1, type: 'f32' }
       }
     }
   });
@@ -206,6 +242,8 @@ export function createDarkness (width: number, height: number) {
     u.uFront = frame.frontPx;
     u.uNight = frame.night;
     u.uTime = frame.time;
+    u.uSweep = frame.sweep;
+    u.uFlicker = frame.flicker;
     group.update();
   }
 

@@ -11,8 +11,7 @@
   },
   "dependencies": {
     "@fontsource/cormorant-garamond": "^5.3.0",
-    "@fontsource/onest": "^5.3.1",
-    "@fontsource/oswald": "^5.3.0",
+    "@fontsource/fira-sans-condensed": "^5.3.0",
     "@lucide/vue": "^1.70.0",
     "@vueuse/core": "^15.0.0",
     "pixi.js": "^8.22.0",

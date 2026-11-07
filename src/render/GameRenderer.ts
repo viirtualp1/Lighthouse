@@ -33,6 +33,7 @@ export interface RendererEvents {
 }
 
 const DRAG_THRESHOLD = 6;
+const SWEEP_SECONDS = 7;
 const MAX_ZOOM = 2.4;
 
 export class GameRenderer {
@@ -153,8 +154,9 @@ export class GameRenderer {
 
     this.particles.update({ state, light, night, seconds: this.lastSeconds }, effects);
 
-    this.darkness.update({ light, frontPx: state.shadowFront * UNIT, night, time: this.time });
-    this.windows.alpha = 0.25 + night * 0.75;
+    const flicker = 0.93 + Math.sin(this.time * 7.3) * 0.03 + Math.sin(this.time * 17.9) * 0.02 + Math.sin(this.time * 2.1) * 0.02;
+    this.darkness.update({ light, frontPx: state.shadowFront * UNIT, night, time: this.time, sweep: this.sweepAngle(), flicker });
+    this.windows.alpha = (0.25 + night * 0.75) * (0.92 + Math.sin(this.time * 5.1) * 0.05 + Math.sin(this.time * 12.7) * 0.03);
     this.drawFlare(night, light.dim > 0);
     this.badgeClock += this.lastSeconds;
 
@@ -346,9 +348,31 @@ export class GameRenderer {
     this.windows.circle(x + w.w / 2, y + w.h / 2, Math.max(w.w, w.h) * 1.6).fill({ color: PALETTE.warm, alpha: 0.12 });
   }
 
+  /** One turn of the lamp every few seconds, like a real lighthouse. */
+  private sweepAngle () {
+    return ((this.time * Math.PI * 2) / SWEEP_SECONDS) % (Math.PI * 2);
+  }
+
+  /** A wedge of light from the lamp, drawn as a few nested layers so its edges fade instead of cutting off. */
+  private glare (cx: number, cy: number, angle: number, length: number, spread: number, alpha: number) {
+    for (let i = 0; i < 4; i++) {
+      const k = 1 - i * 0.22;
+      const a0 = angle - spread * k;
+      const a1 = angle + spread * k;
+      const r = length * (0.55 + 0.45 * k);
+      this.flare.poly([cx, cy, cx + Math.cos(a0) * r, cy + Math.sin(a0) * r, cx + Math.cos(a1) * r, cy + Math.sin(a1) * r])
+        .fill({ color: PALETTE.warm, alpha: alpha * (0.35 + i * 0.25) });
+    }
+  }
+
+  /**
+   * The lamp itself: a soft layered halo, a thin horizontal streak like light caught in a lens, and the glare of the
+   * turning beam (or the fixed one in beam mode) leaving the lantern room.
+   */
   private drawFlare (night: number, burning: boolean) {
     const g = this.flare;
     const { x, y } = this.state.map.lighthouse;
+    const ly = y - 56;
     g.clear();
 
     if (!burning || night <= 0) {
@@ -356,13 +380,21 @@ export class GameRenderer {
     }
 
     const flicker = 0.9 + Math.sin(this.time * 7) * 0.05 + Math.sin(this.time * 19) * 0.03;
-    g.circle(x, y - 56, 34).fill({ color: PALETTE.warm, alpha: 0.12 * night * flicker });
-    g.circle(x, y - 56, 14).fill({ color: PALETTE.warm, alpha: 0.35 * night * flicker });
+    const glow = night * flicker;
+
+    for (const [r, a] of [[60, 0.05], [38, 0.08], [22, 0.16], [11, 0.4], [5, 0.9]] as const) {
+      g.circle(x, ly, r).fill({ color: PALETTE.warm, alpha: a * glow });
+    }
+
+    g.ellipse(x, ly, 70, 1.6).fill({ color: PALETTE.warm, alpha: 0.35 * glow });
+    g.ellipse(x, ly, 34, 0.8).fill({ color: 0xffffff, alpha: 0.6 * glow });
 
     if (this.state.mode === 'beam') {
-      const a = this.state.beamAngle;
-      g.poly([x, y - 56, x + Math.cos(a - 0.12) * 200, y + Math.sin(a - 0.12) * 200, x + Math.cos(a + 0.12) * 200, y + Math.sin(a + 0.12) * 200])
-        .fill({ color: PALETTE.warm, alpha: 0.06 * night * flicker });
+      this.glare(x, ly, this.state.beamAngle, 260, 0.14, 0.05 * glow);
+    } else {
+      const sweep = this.sweepAngle();
+      this.glare(x, ly, sweep, 180, 0.12, 0.06 * glow);
+      this.glare(x, ly, sweep + Math.PI, 90, 0.1, 0.03 * glow);
     }
   }
 
@@ -380,7 +412,7 @@ export class GameRenderer {
     const label = new Text({
       text,
       style: {
-        fontFamily: 'Oswald, sans-serif',
+        fontFamily: 'Fira Sans Condensed, sans-serif',
         fontSize: 13,
         fontWeight: '500',
         letterSpacing: 2.5,

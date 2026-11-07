@@ -12,8 +12,9 @@
   --color-sea: #9fc6d8;
   --color-wood: #c9a37a;
   --font-display: 'Cormorant Garamond', Georgia, serif;
-  --font-hud: 'Oswald', 'Arial Narrow', sans-serif;
-  --font-ui: 'Onest', system-ui, sans-serif;
+  /* One sans for everything functional: condensed for the HUD's tight space, with Cyrillic and tabular figures. */
+  --font-hud: 'Fira Sans Condensed', 'Arial Narrow', sans-serif;
+  --font-ui: 'Fira Sans Condensed', system-ui, sans-serif;
 }
 
 :root {
@@ -30,7 +31,9 @@ body,
 body {
   background: var(--color-void);
   color: var(--color-snow);
-  font: 14px/1.4 var(--font-ui);
+  font: 15px/1.4 var(--font-ui);
+  /* Every digit the same width, so numbers that tick each frame do not shift what stands next to them. */
+  font-variant-numeric: tabular-nums lining-nums;
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
   user-select: none;
@@ -76,7 +79,8 @@ body {
   .label {
     font-family: var(--font-hud);
     font-size: 11px;
-    letter-spacing: 0.16em;
+    font-weight: 500;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--color-mist);
   }
@@ -84,7 +88,8 @@ body {
   .num {
     font-family: var(--font-hud);
     font-weight: 500;
-    font-variant-numeric: tabular-nums;
+    font-variant-numeric: tabular-nums lining-nums;
+    font-feature-settings: 'tnum' 1, 'lnum' 1;
   }
 
   .display {

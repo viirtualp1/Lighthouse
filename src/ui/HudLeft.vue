@@ -133,9 +133,8 @@ function tick (t: number) {
           {{ fear.state }}
         </div>
         <div
-          v-if="Math.abs(fear.rate) >= 0.05"
-          class="num mt-0.5 flex items-center gap-1 text-[12px]"
-          :class="fear.rate > 0 ? 'text-danger' : 'text-good'"
+          class="num mt-0.5 flex h-4 items-center gap-1 text-[12px]"
+          :class="[fear.rate > 0 ? 'text-danger' : 'text-good', Math.abs(fear.rate) < 0.05 ? 'invisible' : '']"
         >
           <TrendingUp
             v-if="fear.rate > 0"

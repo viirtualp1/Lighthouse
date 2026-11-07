@@ -1,7 +1,6 @@
-import '@fontsource/onest/400.css';
-import '@fontsource/onest/600.css';
-import '@fontsource/oswald/400.css';
-import '@fontsource/oswald/500.css';
+import '@fontsource/fira-sans-condensed/400.css';
+import '@fontsource/fira-sans-condensed/500.css';
+import '@fontsource/fira-sans-condensed/600.css';
 import '@fontsource/cormorant-garamond/600.css';
 import './style.css';
 import { createApp } from 'vue';

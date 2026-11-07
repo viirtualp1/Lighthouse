@@ -95,10 +95,10 @@ const tip = computed(() => {
         <section
           v-for="(group, g) in groups"
           :key="group.id"
-          class="flex flex-col gap-1 px-1.5"
+          class="flex flex-col px-1.5"
+          :title="t(`build.groups.${group.id}`)"
           :class="{ 'border-l border-snow/10': g > 0 }"
         >
-          <span class="label px-1 text-[9px] whitespace-nowrap">{{ t(`build.groups.${group.id}`) }}</span>
           <div class="flex gap-1">
             <button
               v-for="item in group.items"
