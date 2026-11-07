@@ -215,7 +215,7 @@ const ONE_SHOTS: Record<Effect['kind'], () => void> = {
   }
 };
 
-/** Starts audio on the first user gesture; browsers refuse to play before one. */
+/** Starts audio on the first user gesture; Chromium refuses to play sound before one. */
 export function unlockSound () {
   if (ctx) {
     if (ctx.state === 'suspended') {

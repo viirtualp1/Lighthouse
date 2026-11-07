@@ -8,7 +8,6 @@ on:
     paths:
       - 'src/**'
       - 'electron/**'
-      - 'public/**'
       - 'build/**'
       - 'index.html'
       - 'package.json'
@@ -21,7 +20,6 @@ on:
     paths:
       - 'src/**'
       - 'electron/**'
-      - 'public/**'
       - 'build/**'
       - 'index.html'
       - 'package.json'

@@ -1,5 +1,5 @@
 /**
- * Draws the app's own artwork from code: the icon (app, favicon, touch icon) and the macOS installer background.
+ * Draws the app's own artwork from code: the app icon and the macOS installer background.
  * Run with `bun run art`; the results are committed, so builds and CI never need the renderer.
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -183,13 +183,10 @@ function png (svg: string, width: number) {
 
 function main () {
   mkdirSync('build', { recursive: true });
-  mkdirSync('public', { recursive: true });
 
   const icon = iconSvg();
   const dmg = dmgSvg();
 
-  writeFileSync('public/favicon.svg', icon);
-  writeFileSync('public/apple-touch-icon.png', png(icon, 180));
   writeFileSync('build/icon.png', png(icon, ICON_SIZE));
   writeFileSync('build/background.png', png(dmg, DMG.width));
   writeFileSync('build/background@2x.png', png(dmg, DMG.width * 2));
