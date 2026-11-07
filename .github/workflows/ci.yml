@@ -1,9 +1,35 @@
 name: CI
 
+# Only changes that can alter the game or how it is built run checks and cut a release; docs and other
+# repository chores (a README edit, say) do not rebuild three installers.
 on:
   push:
     branches: [main]
+    paths:
+      - 'src/**'
+      - 'electron/**'
+      - 'public/**'
+      - 'build/**'
+      - 'index.html'
+      - 'package.json'
+      - 'bun.lock'
+      - 'vite.config.ts'
+      - 'tsconfig*.json'
+      - 'electron-builder.yml'
+      - '.github/workflows/ci.yml'
   pull_request:
+    paths:
+      - 'src/**'
+      - 'electron/**'
+      - 'public/**'
+      - 'build/**'
+      - 'index.html'
+      - 'package.json'
+      - 'bun.lock'
+      - 'vite.config.ts'
+      - 'tsconfig*.json'
+      - 'electron-builder.yml'
+      - '.github/workflows/ci.yml'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
