@@ -39,5 +39,8 @@
   "trustedDependencies": [
     "electron"
   ],
-  "main": "dist-electron/main.cjs"
+  "main": "dist-electron/main.cjs",
+  "packageManager": "bun@1.4.4",
+  "author": "viirtualp1",
+  "description": "A survival town-builder: keep the Lighthouse burning for twenty nights."
 }

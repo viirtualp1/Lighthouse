@@ -1,5 +1,6 @@
 appId: com.viirtualp1.lighthouse
 productName: The Lighthouse
+artifactName: The-Lighthouse-${version}-${os}-${arch}.${ext}
 directories:
   output: release
 files:
