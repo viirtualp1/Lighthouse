@@ -1,4 +1,53 @@
 export default {
+  restoration: {
+    title: 'Restoration',
+    stage: 'Stage {n} of {total}',
+    stages: {
+      tower: { name: 'Shore up the tower', desc: 'Brace the cracked walls so the lamp can burn hotter.' },
+      lens: { name: 'Fit the Lens', desc: 'Grind and mount a new lens to throw the light further.' },
+      lantern: { name: 'Raise the lantern room', desc: 'A taller, tighter lantern room: more reach, less oil wasted.' },
+      greatLight: { name: 'Light the Great Light', desc: 'Rekindle the old Great Light. Only it can hold the Longest Night.' }
+    },
+    gain: '+{n} ring of light',
+    saving: 'beam burns {n}% less oil',
+    deliver: 'Deliver materials',
+    builders: 'Builders',
+    noBuilders: 'Assign builders to continue the work',
+    hoursLeft: 'about {h} h of work left',
+    done: 'The Great Light burns. It will hold the Longest Night.',
+    open: 'Restoration'
+  },
+  goal: {
+    label: 'Goal',
+    restore: 'Restore the Lighthouse: {stage}',
+    progress: '{stage} · {pct}%',
+    idle: 'no builders',
+    done: 'The Great Light burns — hold out until dawn'
+  },
+  finds: {
+    kinds: {
+      oil: { name: 'Oil cache', desc: 'Barrels of lamp oil, washed up and half buried.' },
+      supplies: { name: 'Abandoned stores', desc: 'Timber and scrap iron left behind by someone who did not come back.' },
+      survivors: { name: 'Survivors', desc: 'A few people huddled around a dying fire, waiting for a light.' },
+      wreck: { name: 'Lost wreck', desc: 'A hull no one has picked over yet: a new place to salvage iron.' },
+      journal: { name: 'Torn journal page', desc: 'A page of the old keeper’s journal, pinned under a stone.' }
+    },
+    collect: 'Send people',
+    waitDay: 'Too dark out there — wait for daylight',
+    people: '+{n} people',
+    wreckReward: 'New salvage site',
+    journalReward: 'Calms the town a little',
+    hint: 'Found — send people at daylight'
+  },
+  journal: {
+    title: 'Keeper’s journal · page {n}',
+    pages: [
+      'The sun did not come back. I keep the lamp lit because it is the only thing I still know how to do.',
+      'Whatever stands in the dark does not like the light. It waits at the edge of the beam, patient as the tide.',
+      'The old Great Light could be seen from three bays away. If it burned again, I think even the Shadow would step back.'
+    ],
+    close: 'Close'
+  },
   resources: {
     oil: 'Oil',
     fish: 'Fish',
@@ -57,13 +106,7 @@ export default {
     forecast: 'Day {day}: {h}h night, needs {oil} oil',
     keepers: 'Keepers',
     reachFull: 'Light at full strength',
-    reachShort: 'Light 40% shorter',
-    lens: 'Lens · {n} iron',
-    lensName: 'Lens',
-    upgrade: 'Upgrade',
-    lensGain: '+1 ring of light, same oil',
-    lensWhere: 'Iron: salvage the wrecks on the shore',
-    lensHint: 'The light reaches one ring further for the same oil'
+    reachShort: 'Light 40% shorter'
   },
   supplies: {
     sourceBeam: 'Lighthouse',
@@ -164,9 +207,20 @@ export default {
     cost: 'Not enough resources'
   },
   log: {
+    stageStarted: 'Restoration begun: {stage}',
+    stageDone: 'Restored: {stage}. The light reaches further',
+    found: 'Found in the dark: {find}',
+    collected: {
+      oil: 'Brought back oil from the dark',
+      supplies: 'Brought back wood and iron',
+      survivors: '{n} survivors joined the town',
+      wreck: 'A new wreck is ready to salvage',
+      journal: 'Read page {page} of the keeper’s journal'
+    },
+    finalDusk: 'The Longest Night is coming, and the Great Light is not lit',
+    finalDuskLit: 'The Longest Night is coming. The Great Light is ready',
     built: 'Built: {building}',
     demolished: 'Demolished: {building}',
-    lens: 'The Lens is on: the light reaches further',
     oilOut: 'Oil ran out. The Lighthouse went dark',
     takenOne: 'The Shadow took a person',
     takenMany: 'The Shadow took {n} people',
@@ -176,6 +230,9 @@ export default {
     night: 'Night. The Shadow stands wherever there is no light'
   },
   banner: {
+    finalTitle: 'The Longest Night',
+    finalLit: 'The Great Light is ready to hold it',
+    finalDark: 'Without the Great Light the Shadow will press the light back',
     duskTitle: 'Dusk',
     duskText: 'Night {day} lasts {h}h. The Shadow creeps in',
     nightTitle: 'Night {day}',
@@ -286,13 +343,17 @@ export default {
         text: 'The rendery turns fish into oil. Build one and give it workers — without oil the Lighthouse goes dark.',
         task: 'Build a rendery and staff it'
       },
+      goal: {
+        title: 'The goal',
+        text: 'The Lighthouse is half ruined. Restore it in four stages: each one pushes the light a ring further. The last, the Great Light, is the only thing that can hold the Longest Night on day 20. Click the Lighthouse to run the work.'
+      },
       forecast: {
         title: 'Forecast',
         text: 'This strip shows how many of the coming nights your oil will carry the Lighthouse through — one segment per night, starting with tonight. An empty red segment is a night without light.'
       },
       modes: {
         title: 'Light modes',
-        text: 'Circle lights the town evenly. Beam reaches far, but in one direction. Boost lights wider but burns oil three times faster. By day the map shows where tonight’s light will reach, and a moon above a building warns it will be in the dark.'
+        text: 'Circle lights the town evenly. Beam reaches far in one direction — use it at night to search the dark: things glint out there, and whatever the beam lights long enough is found. Boost lights wider but burns oil three times faster.'
       },
       fear: {
         title: 'Fear',

@@ -1,6 +1,6 @@
-import { BUILDINGS, GAME, NIGHT_HOURS } from './config';
-import { computeLight, DIM, LIT, lighthouseBurning, oilPerHour } from './light';
-import { addBuilding } from './state';
+import { BUILDINGS, GAME, JOURNAL_FEAR_RELIEF, NIGHT_HOURS, RESTORATION } from './config';
+import { computeLight, DIM, greatLightLit, lightAmount, lightParams, LIT, lighthouseBurning, oilPerHour } from './light';
+import { addBuilding, createSlot } from './state';
 import type { BeamMode, BuildingId, ResourceId } from './config';
 import type { Building, DawnReport, GameState, LogEntry, Message, Phase } from './state';
 
@@ -56,7 +56,7 @@ export function population (state: GameState) {
 }
 
 export function assignedWorkers (state: GameState) {
-  return state.buildings.reduce((sum, b) => sum + b.workers, 0);
+  return state.buildings.reduce((sum, b) => sum + b.workers, 0) + state.restoration.builders;
 }
 
 export function housing (state: GameState) {
@@ -193,19 +193,140 @@ export function setBeamAngle (state: GameState, angle: number) {
   computeLight(state);
 }
 
-export function buyLens (state: GameState) {
-  if (state.lens || state.resources.iron < GAME.lensIron) {
+export function currentStage (state: GameState) {
+  return RESTORATION[state.restoration.stage] ?? null;
+}
+
+export function canStartStage (state: GameState) {
+  const stage = currentStage(state);
+
+  if (!stage || state.restoration.started) {
+    return false;
+  }
+
+  return (Object.keys(stage.cost) as ResourceId[]).every(r => state.resources[r] >= (stage.cost[r] ?? 0));
+}
+
+/** Delivers the current stage's materials; from then on builders turn them into progress. */
+export function startStage (state: GameState) {
+  const stage = currentStage(state);
+
+  if (!stage || !canStartStage(state)) {
     return;
   }
 
-  state.resources.iron -= GAME.lensIron;
-  state.lens = true;
-  log(state, 'log.lens', {}, 'good');
+  for (const r of Object.keys(stage.cost) as ResourceId[]) {
+    state.resources[r] -= stage.cost[r] ?? 0;
+  }
+
+  state.restoration.started = true;
+  state.restoration.progress = 0;
+  log(state, 'log.stageStarted', { stage: stage.id });
+}
+
+export function setBuilders (state: GameState, builders: number) {
+  const free = state.healthy - assignedWorkers(state) + state.restoration.builders;
+  const before = state.restoration.builders;
+  state.restoration.builders = Math.max(0, Math.min(builders, GAME.maxBuilders, free));
+
+  if (state.restoration.builders !== before) {
+    state.effects.push({ kind: 'assign', x: state.map.lighthouse.x, y: state.map.lighthouse.y });
+  }
+}
+
+function restore (state: GameState, hours: number) {
+  const stage = currentStage(state);
+  const r = state.restoration;
+
+  if (!stage || !r.started || r.builders === 0) {
+    return;
+  }
+
+  r.progress += r.builders * fearFactor(state) * hours;
+
+  if (r.progress < stage.work) {
+    return;
+  }
+
+  r.stage++;
+  r.started = false;
+  r.progress = 0;
+  state.revision++;
+  state.effects.push({ kind: 'restore', x: state.map.lighthouse.x, y: state.map.lighthouse.y });
+  log(state, 'log.stageDone', { stage: stage.id }, 'good');
+
+  if (!currentStage(state)) {
+    r.builders = 0;
+  }
+
   computeLight(state);
+}
+
+/** Night light that rests on a find long enough reveals it: the town now knows it is there. */
+function discover (state: GameState, hours: number) {
+  if (state.phase === 'day') {
+    return;
+  }
+
+  const params = lightParams(state);
+
+  for (const find of state.finds) {
+    if (find.found || lightAmount(params, find.x, find.y) < 0.5) {
+      continue;
+    }
+
+    find.exposure += hours;
+
+    if (find.exposure >= GAME.findExposureHours) {
+      find.found = true;
+      state.effects.push({ kind: 'discover', x: find.x, y: find.y });
+      log(state, 'log.found', { find: find.kind }, 'good');
+    }
+  }
+}
+
+/** Whether people can go out to a find now: it has to be found, still there, and it has to be daylight. */
+export function canCollect (state: GameState, id: number) {
+  const find = state.finds.find(f => f.id === id);
+
+  return !!find && find.found && !find.collected && state.phase === 'day';
+}
+
+export function collectFind (state: GameState, id: number) {
+  const find = state.finds.find(f => f.id === id);
+
+  if (!find || !canCollect(state, id)) {
+    return;
+  }
+
+  find.collected = true;
+
+  for (const r of Object.keys(find.reward) as ResourceId[]) {
+    state.resources[r] += find.reward[r] ?? 0;
+  }
+
+  state.healthy += find.people;
+
+  if (find.kind === 'wreck') {
+    createSlot(state, { x: find.x, y: find.y }, 'wreck');
+  }
+
+  if (find.kind === 'journal') {
+    state.journalsRead++;
+    state.fear = Math.max(0, state.fear - JOURNAL_FEAR_RELIEF);
+  }
+
+  state.effects.push({ kind: 'collect', x: find.x, y: find.y });
+  log(state, `log.collected.${find.kind}`, { n: find.people, page: state.journalsRead }, 'good');
 }
 
 function fitWorkersToHealthy (state: GameState) {
   let extra = assignedWorkers(state) - state.healthy;
+
+  // Builders step down first: the restoration can wait a day, the docks and the lamp cannot.
+  const builders = Math.min(state.restoration.builders, Math.max(0, extra));
+  state.restoration.builders -= builders;
+  extra -= builders;
 
   for (let i = state.buildings.length - 1; i >= 0 && extra > 0; i--) {
     const building = state.buildings[i]!;
@@ -513,7 +634,9 @@ function announcePhase (state: GameState, previous: Phase) {
     state.effects.push({ kind: state.phase });
   }
 
-  if (state.phase === 'dusk') {
+  if (state.phase === 'dusk' && state.day === NIGHT_HOURS.length) {
+    log(state, greatLightLit(state) ? 'log.finalDuskLit' : 'log.finalDusk', {}, greatLightLit(state) ? 'good' : 'bad');
+  } else if (state.phase === 'dusk') {
     log(state, 'log.dusk', { h: nightHours(state) }, 'warn');
   } else if (state.phase === 'night') {
     log(state, 'log.night', {}, 'warn');
@@ -550,6 +673,8 @@ export function advance (state: GameState, hours: number) {
     burnOil(state, step);
     moveShadow(state, step);
     changeFear(state, step);
+    restore(state, step);
+    discover(state, step);
 
     if (state.phase === 'night' && Math.floor(state.hour) !== Math.floor(before)) {
       shadowTakes(state);

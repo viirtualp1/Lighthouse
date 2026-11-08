@@ -1,4 +1,4 @@
-import { BEAM_MODES, GAME, LIGHT, UNIT } from './config';
+import { BEAM_MODES, GAME, LIGHT, NIGHT_HOURS, RESTORATION, UNIT } from './config';
 import type { Point } from './map';
 import type { GameState } from './state';
 
@@ -40,20 +40,36 @@ export function lighthouseBurning (state: GameState) {
   return state.mode !== 'off' && state.resources.oil > 0 && (state.phase !== 'day' || morning);
 }
 
+/** The Longest Night: the last one. Without the Great Light the Shadow presses the light back. */
+export function isFinalNight (state: GameState) {
+  return state.day === NIGHT_HOURS.length && state.phase !== 'day';
+}
+
+export function greatLightLit (state: GameState) {
+  return state.restoration.stage >= RESTORATION.length;
+}
+
 export function lighthouseReach (state: GameState) {
   const keepers = state.buildings.find(b => b.type === 'lighthouse')?.workers ?? 0;
+  const keeperReach = keepers >= 2 ? 1 : GAME.keeperlessReach;
+  const finale = isFinalNight(state) && !greatLightLit(state) ? GAME.finaleReach : 1;
 
-  return keepers >= 2 ? 1 : GAME.keeperlessReach;
+  return keeperReach * finale;
+}
+
+/** Extra reach, in rings, from the restoration stages finished so far (or up to `stages`, for previews). */
+export function restorationRings (stages: number) {
+  return RESTORATION.slice(0, stages).reduce((sum, stage) => sum + stage.rings, 0);
 }
 
 /**
- * `planned` describes the light the coming night will have, so it can be shown by day too; `withLens` overrides
- * whether the Lens is fitted, to preview what buying it would give.
+ * `planned` describes the light the coming night will have, so it can be shown by day too; `stages` overrides how
+ * much of the restoration is done, to preview what the next stage would give.
  */
-export function lightParams (state: GameState, planned = false, withLens = state.lens): LightParams {
+export function lightParams (state: GameState, planned = false, stages = state.restoration.stage): LightParams {
   const burning = planned ? state.mode !== 'off' : lighthouseBurning(state);
   const reach = lighthouseReach(state) * UNIT;
-  const lens = withLens ? LIGHT.lens : 0;
+  const rings = restorationRings(stages);
   const lanternsOn = planned || (state.phase !== 'day' && state.resources.oil > 0);
 
   const params: LightParams = {
@@ -73,11 +89,11 @@ export function lightParams (state: GameState, planned = false, withLens = state
   }
 
   const radii = LIGHT[state.mode];
-  params.lit = (radii.lit + lens) * reach;
-  params.dim = (radii.dim + lens) * reach;
+  params.lit = (radii.lit + rings) * reach;
+  params.dim = (radii.dim + rings) * reach;
 
   if (state.mode === 'beam') {
-    params.beamLength = (LIGHT.beam.length + lens) * reach;
+    params.beamLength = (LIGHT.beam.length + rings) * reach;
   }
 
   return params;
@@ -140,6 +156,7 @@ export function computeLight (state: GameState) {
 
 export function oilPerHour (state: GameState) {
   const lanterns = state.buildings.filter(b => b.type === 'lantern').length;
+  const saving = RESTORATION.slice(0, state.restoration.stage).reduce((sum, stage) => sum + (stage.oilSaving ?? 0), 0);
 
-  return BEAM_MODES[state.mode].oilPerHour + lanterns * GAME.lanternOilPerHour;
+  return BEAM_MODES[state.mode].oilPerHour * (1 - saving) + lanterns * GAME.lanternOilPerHour;
 }

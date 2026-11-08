@@ -1,13 +1,13 @@
 import { reactive, ref, shallowRef, triggerRef } from 'vue';
 import { playEffects, updateAmbience } from '@/audio/sound';
-import { GAME } from '@/game/config';
+import { GAME, RESTORATION } from '@/game/config';
 import { computeLight } from '@/game/light';
 import * as sim from '@/game/sim';
 import { createState } from '@/game/state';
 import type { BeamMode, BuildingId } from '@/game/config';
 import type { Point } from '@/game/map';
 import type { Effect, Message } from '@/game/state';
-import type { ViewState } from '@/render/GameRenderer';
+import type { MapTarget, ViewState } from '@/render/GameRenderer';
 
 export interface Banner {
   id: number;
@@ -21,8 +21,11 @@ const SHADOW_NEAR = 0.7;
 const MENU_DREAD = 0.2;
 
 const state = shallowRef(createState());
-const view = reactive<ViewState>({ hoverSlot: null, pointer: null, selectedId: null, placing: null, aiming: false, highlight: null, previewLens: false, cinematic: true });
+const view = reactive<ViewState>({ hoverSlot: null, pointer: null, selectedId: null, placing: null, aiming: false, highlight: null, previewStage: false, selectedFind: null, cinematic: true });
 const screenPointer = ref<Point | null>(null);
+const hoverTarget = shallowRef<MapTarget | null>(null);
+/** The journal page just read, shown until the player closes it. */
+const journalPage = ref<number | null>(null);
 const banner = ref<Banner | null>(null);
 const menuOpen = ref(false);
 /** The title screen shows first; the town waits behind it, paused, as a night backdrop. */
@@ -49,7 +52,10 @@ function showBanner (effects: Effect[]) {
   const s = state.value;
 
   for (const effect of effects) {
-    if (effect.kind === 'dusk') {
+    if (effect.kind === 'dusk' && s.day === GAME.daysToWin) {
+      const lit = s.restoration.stage >= RESTORATION.length;
+      show({ key: 'banner.finalTitle', params: {} }, { key: lit ? 'banner.finalLit' : 'banner.finalDark', params: {} });
+    } else if (effect.kind === 'dusk') {
       show({ key: 'banner.duskTitle', params: {} }, { key: 'banner.duskText', params: { day: s.day, h: sim.nightHours(s) } });
     } else if (effect.kind === 'night') {
       show({ key: 'banner.nightTitle', params: { day: s.day } }, { key: 'banner.nightText', params: {} });
@@ -92,13 +98,15 @@ function frame (seconds: number) {
   return effects;
 }
 
-function hover (slot: number | null, point: Point | null, screen: Point | null) {
-  view.hoverSlot = slot;
+function hover (target: MapTarget | null, point: Point | null, screen: Point | null) {
+  view.hoverSlot = target?.slot ?? null;
   view.pointer = point;
+  hoverTarget.value = target;
   screenPointer.value = screen;
 }
 
-function press (slot: number | null, point: Point) {
+function press (target: MapTarget, point: Point) {
+  const slot = target.slot;
   const s = state.value;
 
   if (screen.value !== 'game') {
@@ -130,7 +138,13 @@ function press (slot: number | null, point: Point) {
     return;
   }
 
-  view.selectedId = slot === null ? null : s.buildings.find(b => b.slot === slot)?.id ?? null;
+  if (target.find !== null) {
+    selectFind(target.find);
+  } else if (target.lighthouse) {
+    selectLighthouse();
+  } else {
+    select(slot === null ? null : s.buildings.find(b => b.slot === slot)?.id ?? null);
+  }
 }
 
 function cancel () {
@@ -141,7 +155,18 @@ function cancel () {
 function select (id: number | null) {
   view.placing = null;
   view.aiming = false;
+  view.selectedFind = null;
   view.selectedId = id;
+}
+
+/** Opens the Lighthouse's own card: where the restoration is run from. */
+function selectLighthouse () {
+  select(state.value.buildings.find(b => b.type === 'lighthouse')?.id ?? null);
+}
+
+function selectFind (id: number | null) {
+  select(null);
+  view.selectedFind = id;
 }
 
 function startPlacing (type: BuildingId) {
@@ -181,10 +206,28 @@ function demolish (id: number) {
   refresh();
 }
 
-function buyLens () {
-  sim.buyLens(state.value);
-  view.previewLens = false;
+function startStage () {
+  sim.startStage(state.value);
+  view.previewStage = false;
   refresh();
+}
+
+function setBuilders (builders: number) {
+  sim.setBuilders(state.value, builders);
+  refresh();
+}
+
+function collectFind (id: number) {
+  const s = state.value;
+  const journal = s.finds.find(f => f.id === id)?.kind === 'journal';
+  sim.collectFind(s, id);
+  view.selectedFind = null;
+  journalPage.value = journal ? s.journalsRead : null;
+  refresh();
+}
+
+function closeJournal () {
+  journalPage.value = null;
 }
 
 function setSpeed (speed: number) {
@@ -233,8 +276,10 @@ function escape () {
     closeMenu();
   } else if (view.placing || view.aiming) {
     cancel();
-  } else if (view.selectedId !== null) {
-    view.selectedId = null;
+  } else if (journalPage.value !== null) {
+    closeJournal();
+  } else if (view.selectedId !== null || view.selectedFind !== null) {
+    select(null);
   } else {
     openMenu();
   }
@@ -309,7 +354,14 @@ export function useGame () {
     setMode,
     setWorkers,
     demolish,
-    buyLens,
+    startStage,
+    setBuilders,
+    collectFind,
+    selectFind,
+    selectLighthouse,
+    hoverTarget,
+    journalPage,
+    closeJournal,
     setSpeed,
     togglePause,
     closeDawnReport,

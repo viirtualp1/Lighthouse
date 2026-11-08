@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { computeLight, DARK, LIT } from './light';
-import { advance, canPlace, nightHours, population, shadowAt } from './sim';
+import { GAME, NIGHT_HOURS, RESTORATION } from './config';
+import { computeLight, DARK, lightAmount, lightParams, LIT } from './light';
+import { advance, assignedWorkers, canCollect, canPlace, collectFind, nightHours, population, setBuilders, shadowAt, startStage } from './sim';
 import { createState } from './state';
 import type { GameState } from './state';
 
@@ -93,5 +94,79 @@ describe('dawn', () => {
     advance(state, 1);
 
     expect(state.dawnReport?.eaten).toBe(people);
+  });
+});
+
+describe('restoration', () => {
+  it('takes materials, then builders, and pushes the light a ring further', () => {
+    const state = createState(8);
+    state.resources.wood = 100;
+    state.resources.iron = 100;
+    const before = lightParams(state, true).lit;
+
+    startStage(state);
+    expect(state.resources.wood).toBe(100 - RESTORATION[0]!.cost.wood!);
+    expect(state.restoration.started).toBe(true);
+
+    setBuilders(state, GAME.maxBuilders);
+    expect(assignedWorkers(state)).toBeGreaterThanOrEqual(GAME.maxBuilders);
+
+    advance(state, RESTORATION[0]!.work / GAME.maxBuilders + 1);
+
+    expect(state.restoration.stage).toBe(1);
+    expect(lightParams(state, true).lit).toBeGreaterThan(before);
+  });
+
+  it('lets the Shadow press the light back on the Longest Night unless the Great Light burns', () => {
+    const dark = atNight(createState(9));
+    dark.day = NIGHT_HOURS.length;
+    const lit = atNight(createState(9));
+    lit.day = NIGHT_HOURS.length;
+    lit.restoration.stage = RESTORATION.length;
+
+    expect(lightParams(dark).lit).toBeLessThan(lightParams(atNight(createState(9))).lit);
+    expect(lightParams(lit).lit).toBeGreaterThan(lightParams(atNight(createState(9))).lit);
+  });
+});
+
+describe('finds', () => {
+  it('lie beyond the steady light, so they have to be searched for', () => {
+    const state = atNight(createState(10));
+    const params = lightParams(state);
+
+    expect(state.finds.length).toBeGreaterThan(0);
+    state.finds.forEach(find => expect(lightAmount(params, find.x, find.y)).toBeLessThan(0.5));
+  });
+
+  it('are found by holding the beam on them, and collected only by day', () => {
+    const state = atNight(createState(11), 0.5);
+    const { x, y } = state.map.lighthouse;
+    const find = [...state.finds].sort((a, b) => Math.hypot(a.x - x, a.y - y) - Math.hypot(b.x - x, b.y - y))[0]!;
+    state.mode = 'beam';
+    state.beamAngle = Math.atan2(find.y - y, find.x - x);
+    advance(state, 1);
+
+    expect(find.found).toBe(true);
+    expect(canCollect(state, find.id)).toBe(false);
+
+    state.phase = 'day';
+    const oil = state.resources.oil;
+    collectFind(state, find.id);
+
+
+    expect(find.collected).toBe(true);
+    expect(state.resources.oil).toBe(oil + (find.reward.oil ?? 0));
+  });
+
+  it('turn a found wreck into a new salvage site', () => {
+    const state = createState(12);
+    const wreck = state.finds.find(f => f.kind === 'wreck')!;
+    const slots = state.map.slots.length;
+    wreck.found = true;
+    collectFind(state, wreck.id);
+
+    expect(state.map.slots).toHaveLength(slots + 1);
+    expect(state.map.slots.at(-1)!.kind).toBe('wreck');
+    expect(state.light).toHaveLength(slots + 1);
   });
 });

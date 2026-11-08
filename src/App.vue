@@ -5,6 +5,8 @@ import BuildBar from './ui/BuildBar.vue';
 import BuildingCard from './ui/BuildingCard.vue';
 import DawnModal from './ui/DawnModal.vue';
 import EndModal from './ui/EndModal.vue';
+import FindCard from './ui/FindCard.vue';
+import GoalLine from './ui/GoalLine.vue';
 import HudAlerts from './ui/HudAlerts.vue';
 import HudLeft from './ui/HudLeft.vue';
 import HudTop from './ui/HudTop.vue';
@@ -14,6 +16,7 @@ import MapView from './ui/MapView.vue';
 import PauseMenu from './ui/PauseMenu.vue';
 import PhaseBanner from './ui/PhaseBanner.vue';
 import ResourcePanel from './ui/ResourcePanel.vue';
+import RestorationCard from './ui/RestorationCard.vue';
 import TutorialOverlay from './ui/TutorialOverlay.vue';
 import { useGame } from './ui/useGame';
 
@@ -82,11 +85,14 @@ onBeforeUnmount(() => {
     >
       <PhaseBanner />
       <HudTop />
+      <GoalLine />
       <HudLeft />
       <HudAlerts />
       <LighthouseHud />
       <BuildBar />
       <div class="pointer-events-none absolute right-4 bottom-4 flex flex-col items-end gap-2">
+        <RestorationCard />
+        <FindCard />
         <BuildingCard />
         <ResourcePanel />
       </div>

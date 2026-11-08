@@ -1,5 +1,5 @@
 import { Application, Container, Graphics, Sprite, Text, Texture } from 'pixi.js';
-import { BUILDINGS, UNIT } from '@/game/config';
+import { BUILDINGS, RESTORATION, UNIT } from '@/game/config';
 import { DARK, levelAt, lightParams } from '@/game/light';
 import { SLOT_RADIUS, slotNear } from '@/game/map';
 import { canPlace, nightness, shadowAt } from '@/game/sim';
@@ -23,16 +23,24 @@ export interface ViewState {
   aiming: boolean;
   /** A spot on the map the tutorial points at. */
   highlight: Point | null;
-  /** The player is hovering the Lens upgrade: show how far the light would reach with it. */
-  previewLens: boolean;
+  /** The player is hovering the next restoration stage: show how far the light would reach with it. */
+  previewStage: boolean;
+  selectedFind: number | null;
   /** Title-screen backdrop: always night, the Lighthouse burning, the Shadow everywhere else, no game markings. */
   cinematic: boolean;
 }
 
+/** What lies under the pointer: a building slot, a find out in the dark, or the Lighthouse itself. */
+export interface MapTarget {
+  slot: number | null;
+  find: number | null;
+  lighthouse: boolean;
+}
+
 export interface RendererEvents {
   frame: (seconds: number) => void;
-  hover: (slot: number | null, point: Point | null, screen: Point | null) => void;
-  press: (slot: number | null, point: Point) => void;
+  hover: (target: MapTarget | null, point: Point | null, screen: Point | null) => void;
+  press: (target: MapTarget, point: Point) => void;
   cancel: () => void;
 }
 
@@ -258,7 +266,19 @@ export class GameRenderer {
       return;
     }
 
-    this.events.hover(slotNear(this.state.map, p.x, p.y)?.id ?? null, { x: p.x, y: p.y }, { x: event.global.x, y: event.global.y });
+    this.events.hover(this.pick(p), { x: p.x, y: p.y }, { x: event.global.x, y: event.global.y });
+  }
+
+  private pick (p: Point): MapTarget {
+    const { x, y } = this.state.map.lighthouse;
+    const lighthouse = Math.abs(p.x - x) < 30 && p.y > y - 80 && p.y < y + 26;
+    const find = this.state.finds.find(f => f.found && !f.collected && Math.hypot(f.x - p.x, f.y - p.y) < 30);
+
+    return {
+      slot: lighthouse || find ? null : slotNear(this.state.map, p.x, p.y)?.id ?? null,
+      find: find?.id ?? null,
+      lighthouse
+    };
   }
 
   private onUp (event: FederatedPointerEvent) {
@@ -270,7 +290,7 @@ export class GameRenderer {
     }
 
     const p = this.toWorld(event);
-    this.events.press(slotNear(this.state.map, p.x, p.y)?.id ?? null, { x: p.x, y: p.y });
+    this.events.press(this.pick(p), { x: p.x, y: p.y });
   }
 
   private onWheel (event: FederatedWheelEvent) {
@@ -334,6 +354,12 @@ export class GameRenderer {
     const pulse = 0.75 + Math.sin(this.time * 5) * 0.25;
     g.clear();
 
+    for (const find of state.finds) {
+      if (find.found && !find.collected) {
+        this.findMark(find.x, find.y, pulse);
+      }
+    }
+
     for (const b of state.buildings) {
       if (b.type === 'lighthouse') {
         continue;
@@ -358,6 +384,16 @@ export class GameRenderer {
         g.circle(x, y, 5).fill(PALETTE.warm).circle(x + 2.6, y - 1.8, 4.2).cut();
       }
     }
+  }
+
+  /** A found thing out in the dark: a warm diamond on a short stake, the kind of mark a scout would leave. */
+  private findMark (x: number, y: number, pulse: number) {
+    const g = this.badges;
+    g.moveTo(x, y + 4).lineTo(x, y - 14).stroke({ width: 1.5, color: PALETTE.warm, alpha: 0.7 });
+    g.circle(x, y - 22, 16).fill({ color: PALETTE.warm, alpha: 0.12 * pulse });
+    g.poly([x, y - 32, x + 9, y - 22, x, y - 12, x - 9, y - 22]).fill({ color: 0x0b0d10, alpha: 0.92 }).stroke({ width: 2, color: PALETTE.warm, alpha: pulse });
+    g.circle(x, y - 22, 2.5).fill({ color: PALETTE.warm });
+    g.ellipse(x, y + 4, 8, 3).fill({ color: 0x000000, alpha: 0.4 });
   }
 
   private badge (x: number, y: number, color: number, alpha: number) {
@@ -512,9 +548,9 @@ export class GameRenderer {
     }
   }
 
-  /** The light's reach with the Lens fitted, drawn in white over the current warm zones so the gain stands out. */
-  private drawLensPreview (g: Graphics) {
-    const p = lightParams(this.state, true, true);
+  /** The light's reach after the next restoration stage, in white over the current warm zones so the gain stands out. */
+  private drawStagePreview (g: Graphics) {
+    const p = lightParams(this.state, true, this.state.restoration.stage + 1);
     const { x, y } = p.origin;
     const pulse = 0.6 + Math.sin(this.time * 4) * 0.25;
 
@@ -536,8 +572,14 @@ export class GameRenderer {
     const pulse = 0.65 + Math.sin(this.time * 4) * 0.25;
     g.clear();
 
-    if (view.previewLens && !state.lens) {
-      this.drawLensPreview(g);
+    if (view.previewStage && state.restoration.stage < RESTORATION.length) {
+      this.drawStagePreview(g);
+    }
+
+    const find = state.finds.find(f => f.id === view.selectedFind);
+
+    if (find) {
+      g.circle(find.x, find.y, 22).stroke({ width: 2, color: PALETTE.white, alpha: pulse });
     }
 
     if (view.highlight) {

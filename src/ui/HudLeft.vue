@@ -58,6 +58,14 @@ function logText (entry: LogEntry) {
     params.building = t(`buildings.${params.building}.name`);
   }
 
+  if (typeof params.stage === 'string') {
+    params.stage = t(`restoration.stages.${params.stage}.name`);
+  }
+
+  if (typeof params.find === 'string') {
+    params.find = t(`finds.kinds.${params.find}.name`);
+  }
+
   return t(entry.key, params);
 }
 

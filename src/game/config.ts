@@ -63,7 +63,11 @@ export const GAME = {
   naturalRecovery: 0.1,
   healHoursPerPatient: 6,
   wreckIron: 100,
-  lensIron: 30,
+  maxBuilders: 6,
+  /** On the last night, without the Great Light, the Shadow presses the Lighthouse's light back to this share. */
+  finaleReach: 0.35,
+  /** Hours a find must stay in the light at night before the town notices it. */
+  findExposureHours: 0.5,
   beamArc: Math.PI / 3,
   lanternOilPerHour: 0.2,
   keeperlessReach: 0.6
@@ -75,7 +79,6 @@ export const LIGHT = {
   boost: { lit: 5.6, dim: 7 },
   beam: { lit: 1.6, dim: 3, length: 12 },
   lantern: { lit: 1.1, dim: 1.8 },
-  lens: 1,
   litAbove: 0.65,
   dimAbove: 0.12
 };
@@ -91,6 +94,47 @@ export const START_RESOURCES: Record<ResourceId, number> = {
 };
 
 export const RESOURCE_IDS: ResourceId[] = ['oil', 'fish', 'wood', 'iron'];
+
+export type StageId = 'tower' | 'lens' | 'lantern' | 'greatLight';
+
+export interface RestorationStage {
+  id: StageId;
+  cost: Partial<Record<ResourceId, number>>;
+  /** Worker-hours of building once the materials are delivered. */
+  work: number;
+  /** How many rings further every light mode reaches once this stage is done. */
+  rings: number;
+  /** Share of the beam's oil the stage saves from then on. */
+  oilSaving?: number;
+}
+
+/**
+ * The town's long goal: the Lighthouse starts half ruined and is restored stage by stage. Each stage pushes the light
+ * further out; the last one, the Great Light, is what holds the Longest Night.
+ */
+export const RESTORATION: RestorationStage[] = [
+  { id: 'tower', cost: { wood: 40, iron: 5 }, work: 24, rings: 0.5 },
+  { id: 'lens', cost: { iron: 30 }, work: 30, rings: 1 },
+  { id: 'lantern', cost: { wood: 60, iron: 25 }, work: 48, rings: 0.5, oilSaving: 0.25 },
+  { id: 'greatLight', cost: { iron: 40, oil: 60 }, work: 72, rings: 1.5 }
+];
+
+export type FindKind = 'oil' | 'supplies' | 'survivors' | 'wreck' | 'journal';
+
+/** What lies out in the dark, waiting for the light to reach it. */
+export const FINDS: { kind: FindKind; reward: Partial<Record<ResourceId, number>>; people?: number }[] = [
+  { kind: 'oil', reward: { oil: 45 } },
+  { kind: 'oil', reward: { oil: 35 } },
+  { kind: 'supplies', reward: { wood: 40, iron: 15 } },
+  { kind: 'supplies', reward: { wood: 30, iron: 20 } },
+  { kind: 'survivors', reward: {}, people: 4 },
+  { kind: 'wreck', reward: {} },
+  { kind: 'journal', reward: {} },
+  { kind: 'journal', reward: {} },
+  { kind: 'journal', reward: {} }
+];
+
+export const JOURNAL_FEAR_RELIEF = 8;
 
 export const BEAM_MODES: Record<BeamMode, BeamDef> = {
   circle: { oilPerHour: 2 },

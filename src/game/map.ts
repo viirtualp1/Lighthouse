@@ -85,7 +85,7 @@ function buildCoast (phase: number) {
   return coast;
 }
 
-function slot (map: GameMap, point: Point, ring: number, kind: SlotKind): Slot {
+export function makeSlot (map: GameMap, point: Point, ring: number, kind: SlotKind): Slot {
   return {
     id: map.slots.length,
     x: point.x,
@@ -143,17 +143,17 @@ export function createMap (seed: number): GameMap {
         || sites.some(s => Math.hypot(s.x - point.x, s.y - point.y) < SITE_CLEARANCE);
 
       if (onLand && inside && !blocked) {
-        map.slots.push(slot(map, point, ring, 'ring'));
+        map.slots.push(makeSlot(map, point, ring, 'ring'));
       }
     }
   }
 
   for (const site of OIL_SITES) {
-    map.slots.push(slot(map, site, 0, 'oil'));
+    map.slots.push(makeSlot(map, site, 0, 'oil'));
   }
 
   for (const site of wrecks) {
-    map.slots.push(slot(map, site, 0, 'wreck'));
+    map.slots.push(makeSlot(map, site, 0, 'wreck'));
   }
 
   map.maxEdge = Math.max(edgeDistance(LIGHTHOUSE.x, LIGHTHOUSE.y), ...map.slots.map(s => s.edgeDistance));

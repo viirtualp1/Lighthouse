@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, useTemplateRef } from 'vue';
-import { BUILDINGS } from '@/game/config';
+import { BUILDINGS, RESTORATION } from '@/game/config';
 import { DIM, LIT, tonightRisk } from '@/game/light';
-import { canPlace, lightAt, residentsOf, shadowAt } from '@/game/sim';
+import { canPlace, currentStage, lightAt, residentsOf, shadowAt } from '@/game/sim';
 import { GameRenderer } from '@/render/GameRenderer';
 import { useI18n } from 'vue-i18n';
 import { buildingStatus } from './buildingStatus';
@@ -34,8 +34,33 @@ const tooltip = computed(() => {
   const slotId = game.view.hoverSlot;
   const at = game.screenPointer.value;
   const slot = slotId === null ? undefined : s.map.slots[slotId];
+  const target = game.hoverTarget.value;
 
-  if (!slot || !at || game.view.aiming || game.screen.value !== 'game') {
+  if (!at || game.view.aiming || game.screen.value !== 'game') {
+    return null;
+  }
+
+  const find = target?.find === null || target?.find === undefined ? undefined : s.finds.find(f => f.id === target.find);
+
+  if (find) {
+    return { title: t(`finds.kinds.${find.kind}.name`), lines: [{ text: t('finds.hint'), tone: 'text-warm' }], x: at.x + 18, y: at.y + 18 };
+  }
+
+  if (target?.lighthouse) {
+    const stage = currentStage(s);
+
+    return {
+      title: t('buildings.lighthouse.name'),
+      lines: [
+        { text: stage ? `${t('restoration.title')} · ${t('restoration.stage', { n: s.restoration.stage + 1, total: RESTORATION.length })}` : t('restoration.done'), tone: 'text-warm' },
+        { text: t('map.manage'), tone: 'text-fog' }
+      ],
+      x: at.x + 18,
+      y: at.y + 18
+    };
+  }
+
+  if (!slot) {
     return null;
   }
 

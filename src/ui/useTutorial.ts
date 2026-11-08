@@ -55,6 +55,10 @@ const STEPS: TutorialStep[] = [
     done: state => state.buildings.some(b => b.type === 'renderer' && b.workers > 0)
   },
   {
+    id: 'goal',
+    target: 'goal'
+  },
+  {
     id: 'forecast',
     target: 'forecast'
   },

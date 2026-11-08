@@ -16,7 +16,7 @@ const card = computed(() => {
   const s = game.state.value;
   const building = s.buildings.find(b => b.id === game.view.selectedId);
 
-  if (!building) {
+  if (!building || building.type === 'lighthouse') {
     return null;
   }
 

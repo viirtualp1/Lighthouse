@@ -209,6 +209,17 @@ const ONE_SHOTS: Record<Effect['kind'], () => void> = {
   dawn: () => {
     [261.6, 329.6, 392, 523.3].forEach((f, i) => tone(f, 0.1, 0.02, 2.2, 'sine', now() + i * 0.14));
   },
+  discover: () => {
+    [659.3, 987.8, 1318.5].forEach((f, i) => tone(f, 0.07, 0.01, 1.4, 'sine', now() + i * 0.09));
+  },
+  restore: () => {
+    bell(146.8, 0.3);
+    [293.7, 370, 440, 587.3].forEach((f, i) => tone(f, 0.09, 0.03, 2.6, 'triangle', now() + 0.2 + i * 0.12));
+  },
+  collect: () => {
+    tone(523.3, 0.08, 0.005, 0.25, 'triangle');
+    tone(784, 0.06, 0.005, 0.35, 'triangle', now() + 0.08);
+  },
   oilOut: () => {
     tone(220, 0.25, 0.01, 0.5, 'triangle', now(), 110);
     tone(147, 0.25, 0.01, 0.9, 'triangle', now() + 0.35, 73);

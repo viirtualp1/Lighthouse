@@ -32,6 +32,8 @@ const LIMIT = 900;
 const CHIMNEYS = new Set(['hut', 'renderer', 'infirmary']);
 const SMOKE_EVERY = 0.7;
 const WIND = 7;
+/** Chance per frame that an undiscovered find glints in the dark. */
+const GLINT_CHANCE = 0.012;
 
 function softDot () {
   const size = 64;
@@ -73,6 +75,7 @@ export class Particles {
     this.emitMotes(frame);
     this.emitAsh(frame);
     this.emitSparkles(frame);
+    this.emitGlints(frame);
 
     const alive: Mote[] = [];
 
@@ -212,8 +215,53 @@ export class Particles {
     });
   }
 
+  /**
+   * Now and then something out in the dark catches the eye: a brief glint where an undiscovered find lies. It is the
+   * game's only hint that the beam is worth turning there.
+   */
+  private emitGlints ({ state, night }: ParticleFrame) {
+    if (night < 0.4) {
+      return;
+    }
+
+    for (const find of state.finds) {
+      if (find.found || Math.random() > GLINT_CHANCE) {
+        continue;
+      }
+
+      this.spawn('glow', find.x + (Math.random() - 0.5) * 16, find.y - 6 + (Math.random() - 0.5) * 10, {
+        tint: PALETTE.warm,
+        maxLife: 0.7 + Math.random() * 0.5,
+        peak: 0.9 * night,
+        baseScale: 0.07,
+        grow: 0.8
+      });
+    }
+  }
+
   private burst (effect: Effect) {
     if (effect.x === undefined || effect.y === undefined) {
+      return;
+    }
+
+    if (effect.kind === 'discover' || effect.kind === 'collect' || effect.kind === 'restore') {
+      const count = effect.kind === 'restore' ? 70 : 30;
+      const speed = effect.kind === 'restore' ? 90 : 45;
+      const y = effect.kind === 'restore' ? effect.y - 56 : effect.y - 20;
+
+      for (let i = 0; i < count; i++) {
+        const a = Math.random() * Math.PI * 2;
+        const v = speed * (0.4 + Math.random() * 0.6);
+        this.spawn('glow', effect.x, y, {
+          tint: PALETTE.warm,
+          vx: Math.cos(a) * v,
+          vy: Math.sin(a) * v - 10,
+          maxLife: 0.9 + Math.random() * 0.8,
+          peak: 0.8,
+          baseScale: 0.06 + Math.random() * 0.05
+        });
+      }
+
       return;
     }
 
