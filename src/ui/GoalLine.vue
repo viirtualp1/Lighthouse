@@ -1,3 +1,33 @@
+<template>
+  <button
+    class="plate pointer-events-auto absolute top-25 left-1/2 flex -translate-x-1/2 items-center gap-2.5 px-3.5 py-1.5 whitespace-nowrap transition-colors hover:border-snow/40"
+    data-tour="goal"
+    @click="game.selectLighthouse()"
+  >
+    <Hammer
+      :size="14"
+      :stroke-width="1.7"
+      class="text-warm"
+    />
+    <span class="font-hud text-[11px] font-medium tracking-[0.12em] text-warm uppercase">{{ t('goal.label') }} {{ goal.step }}/{{ RESTORATION.length }}</span>
+    <span
+      class="text-[14px]"
+      :class="goal.warn ? 'text-danger' : 'text-snow'"
+    >{{ goal.text }}</span>
+    <span
+      v-for="c in goal.cost"
+      :key="c.id"
+      class="flex items-center gap-1 font-hud text-[13px] font-medium lining-nums tabular-nums"
+      :class="c.short ? 'text-danger' : 'text-mist'"
+    >
+      <ResourceIcon
+        :id="c.id"
+        :size="13"
+      />{{ c.amount }}
+    </span>
+  </button>
+</template>
+
 <script setup lang="ts">
 import { computed } from 'vue';
 import { Hammer } from '@lucide/vue';
@@ -41,33 +71,3 @@ const goal = computed(() => {
   };
 });
 </script>
-
-<template>
-  <button
-    class="plate pointer-events-auto absolute top-[100px] left-1/2 flex -translate-x-1/2 items-center gap-2.5 px-3.5 py-1.5 whitespace-nowrap transition-colors hover:border-snow/40"
-    data-tour="goal"
-    @click="game.selectLighthouse()"
-  >
-    <Hammer
-      :size="14"
-      :stroke-width="1.7"
-      class="text-warm"
-    />
-    <span class="label text-warm">{{ t('goal.label') }} {{ goal.step }}/{{ RESTORATION.length }}</span>
-    <span
-      class="text-[14px]"
-      :class="goal.warn ? 'text-danger' : 'text-snow'"
-    >{{ goal.text }}</span>
-    <span
-      v-for="c in goal.cost"
-      :key="c.id"
-      class="num flex items-center gap-1 text-[13px]"
-      :class="c.short ? 'text-danger' : 'text-mist'"
-    >
-      <ResourceIcon
-        :id="c.id"
-        :size="13"
-      />{{ c.amount }}
-    </span>
-  </button>
-</template>

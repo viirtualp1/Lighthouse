@@ -4,7 +4,7 @@ import ru from './ru';
 
 export type Locale = 'en' | 'ru';
 
-export const LOCALES: { id: Locale; name: string }[] = [
+export const LOCALES: { id: Locale, name: string }[] = [
   { id: 'en', name: 'English' },
   { id: 'ru', name: 'Русский' }
 ];

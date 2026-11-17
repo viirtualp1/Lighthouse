@@ -16,32 +16,32 @@ import type { Effect, GameState } from '@/game/state';
 import type { Window } from './drawBuilding';
 
 export interface ViewState {
-  hoverSlot: number | null;
-  pointer: Point | null;
-  selectedId: number | null;
-  placing: BuildingId | null;
-  aiming: boolean;
+  hoverSlot: number | null
+  pointer: Point | null
+  selectedId: number | null
+  placing: BuildingId | null
+  aiming: boolean
   /** A spot on the map the tutorial points at. */
-  highlight: Point | null;
+  highlight: Point | null
   /** The player is hovering the next restoration stage: show how far the light would reach with it. */
-  previewStage: boolean;
-  selectedFind: number | null;
+  previewStage: boolean
+  selectedFind: number | null
   /** Title-screen backdrop: always night, the Lighthouse burning, the Shadow everywhere else, no game markings. */
-  cinematic: boolean;
+  cinematic: boolean
 }
 
 /** What lies under the pointer: a building slot, a find out in the dark, or the Lighthouse itself. */
 export interface MapTarget {
-  slot: number | null;
-  find: number | null;
-  lighthouse: boolean;
+  slot: number | null
+  find: number | null
+  lighthouse: boolean
 }
 
 export interface RendererEvents {
-  frame: (seconds: number) => void;
-  hover: (target: MapTarget | null, point: Point | null, screen: Point | null) => void;
-  press: (target: MapTarget, point: Point) => void;
-  cancel: () => void;
+  frame: (seconds: number) => void
+  hover: (target: MapTarget | null, point: Point | null, screen: Point | null) => void
+  press: (target: MapTarget, point: Point) => void
+  cancel: () => void
 }
 
 const DRAG_THRESHOLD = 6;
@@ -71,7 +71,7 @@ export class GameRenderer {
   private revision = -1;
   private time = 0;
   private minZoom = 1;
-  private drag: { start: Point; origin: Point; moved: boolean } | null = null;
+  private drag: { start: Point, origin: Point, moved: boolean } | null = null;
   private state: GameState;
   private events: RendererEvents;
 

@@ -1,10 +1,20 @@
+<template>
+  <component
+    :is="ICONS[props.id].icon"
+    :size="props.size"
+    :stroke-width="1.7"
+    class="inline-block shrink-0 align-[-0.15em]"
+    :class="ICONS[props.id].tone"
+  />
+</template>
+
 <script setup lang="ts">
 import { Anvil, Droplet, Fish, TreePine } from '@lucide/vue';
 import type { ResourceId } from '@/game/config';
 
 const props = withDefaults(defineProps<{
-  id: ResourceId;
-  size?: number;
+  id: ResourceId
+  size?: number
 }>(), {
   size: 14
 });
@@ -17,13 +27,3 @@ const ICONS = {
   iron: { icon: Anvil, tone: 'text-mist' }
 };
 </script>
-
-<template>
-  <component
-    :is="ICONS[props.id].icon"
-    :size="props.size"
-    :stroke-width="1.7"
-    class="inline-block shrink-0 align-[-0.15em]"
-    :class="ICONS[props.id].tone"
-  />
-</template>

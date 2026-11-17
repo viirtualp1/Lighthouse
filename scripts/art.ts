@@ -6,10 +6,10 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { Resvg } from '@resvg/resvg-js';
 
 interface Eye {
-  x: number;
-  y: number;
-  size: number;
-  open: number;
+  x: number
+  y: number
+  size: number
+  open: number
 }
 
 const WARM = '#ffe9c4';
@@ -54,7 +54,7 @@ function lighthouse (stroke: number) {
 }
 
 /** Soft blades of light leaving the lamp, fading with distance. */
-function beam (id: string, from: { x: number; y: number }, to: { x: number; y: number }, spread: number) {
+function beam (id: string, from: { x: number, y: number }, to: { x: number, y: number }, spread: number) {
   const angle = Math.atan2(to.y - from.y, to.x - from.x);
   const length = Math.hypot(to.x - from.x, to.y - from.y);
   const a = { x: from.x + Math.cos(angle - spread) * length, y: from.y + Math.sin(angle - spread) * length };

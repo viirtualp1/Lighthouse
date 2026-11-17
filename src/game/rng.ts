@@ -1,8 +1,8 @@
 export interface Rng {
-  next: () => number;
-  range: (min: number, max: number) => number;
-  int: (min: number, max: number) => number;
-  chance: (p: number) => boolean;
+  next: () => number
+  range: (min: number, max: number) => number
+  int: (min: number, max: number) => number
+  chance: (p: number) => boolean
 }
 
 /** mulberry32: tiny, fast and good enough for map layout and dice rolls. */

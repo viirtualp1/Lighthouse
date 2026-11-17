@@ -1,3 +1,89 @@
+<template>
+  <section class="plate pointer-events-auto relative w-80 p-4">
+    <div
+      v-if="breakdown"
+      class="plate absolute top-0 right-full mr-2 w-64 px-4 py-3 whitespace-nowrap"
+    >
+      <div class="mb-2 flex items-center gap-2">
+        <ResourceIcon
+          :id="breakdown.id"
+          :size="16"
+        />
+        <span class="font-display text-xl leading-none font-semibold">{{ t(`resources.${breakdown.id}`) }}</span>
+      </div>
+      <ul class="space-y-1">
+        <li
+          v-for="row in breakdown.rows"
+          :key="row.name"
+          class="flex justify-between gap-4 text-[13px]"
+        >
+          <span class="text-mist">{{ row.name }}</span>
+          <span
+            class="font-hud font-medium lining-nums tabular-nums"
+            :class="row.amount < 0 ? 'text-danger' : 'text-good'"
+          >{{ formatRate(row.amount) }}</span>
+        </li>
+        <li
+          v-if="breakdown.eaten"
+          class="flex justify-between gap-4 border-t border-snow/10 pt-1 text-[13px]"
+        >
+          <span class="text-mist">{{ t('supplies.eaten') }}</span>
+          <span class="font-hud font-medium text-danger lining-nums tabular-nums">−{{ breakdown.eaten }}</span>
+        </li>
+        <li
+          v-if="!breakdown.rows.length && !breakdown.eaten"
+          class="text-[13px] text-fog"
+        >
+          {{ t('supplies.steady') }}
+        </li>
+      </ul>
+    </div>
+
+    <ul class="space-y-1">
+      <li
+        v-for="row in resources"
+        :key="row.id"
+        class="-mx-2 flex cursor-default items-center gap-3 rounded-[2px] px-2 py-0.5 whitespace-nowrap transition-colors hover:bg-snow/5"
+        @mouseenter="hovered = row.id"
+        @mouseleave="hovered = null"
+      >
+        <ResourceIcon
+          :id="row.id"
+          :size="19"
+        />
+        <span class="flex-1 text-[15px] text-mist">{{ row.name }}</span>
+        <span
+          class="min-w-14 text-right font-hud text-[13px] font-medium lining-nums tabular-nums"
+          :class="row.tone"
+        >{{ row.note }}</span>
+        <span class="w-12 text-right font-hud text-2xl leading-none font-medium lining-nums tabular-nums">{{ row.value }}</span>
+      </li>
+    </ul>
+
+    <div class="my-3 border-t border-snow/10" />
+    <ul class="space-y-2">
+      <li
+        v-for="row in people"
+        :key="row.id"
+        class="flex items-center gap-3 whitespace-nowrap"
+      >
+        <component
+          :is="row.icon"
+          :size="19"
+          :stroke-width="1.6"
+          :class="row.iconTone"
+        />
+        <span class="flex-1 text-[15px] text-mist">{{ row.name }}</span>
+        <span
+          class="min-w-14 text-right font-hud text-[13px] font-medium lining-nums tabular-nums"
+          :class="row.tone"
+        >{{ row.note }}</span>
+        <span class="w-12 text-right font-hud text-2xl leading-none font-medium lining-nums tabular-nums">{{ row.value }}</span>
+      </li>
+    </ul>
+  </section>
+</template>
+
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { BedDouble, HeartPulse, Users } from '@lucide/vue';
@@ -10,13 +96,13 @@ import type { Component } from 'vue';
 import type { ResourceId } from '@/game/config';
 
 interface PeopleRow {
-  id: string;
-  name: string;
-  icon: Component;
-  value: number;
-  note: string;
-  tone: string;
-  iconTone: string;
+  id: string
+  name: string
+  icon: Component
+  value: number
+  note: string
+  tone: string
+  iconTone: string
 }
 
 const game = useGame();
@@ -82,89 +168,3 @@ function formatRate (rate: number) {
   return `${rate > 0 ? '+' : '−'}${Math.abs(rate).toFixed(1)}${t('supplies.perHour')}`;
 }
 </script>
-
-<template>
-  <section class="plate pointer-events-auto relative w-80 p-4">
-    <div
-      v-if="breakdown"
-      class="plate absolute right-full top-0 mr-2 w-64 px-4 py-3 whitespace-nowrap"
-    >
-      <div class="mb-2 flex items-center gap-2">
-        <ResourceIcon
-          :id="breakdown.id"
-          :size="16"
-        />
-        <span class="display text-xl leading-none">{{ t(`resources.${breakdown.id}`) }}</span>
-      </div>
-      <ul class="space-y-1">
-        <li
-          v-for="row in breakdown.rows"
-          :key="row.name"
-          class="flex justify-between gap-4 text-[13px]"
-        >
-          <span class="text-mist">{{ row.name }}</span>
-          <span
-            class="num"
-            :class="row.amount < 0 ? 'text-danger' : 'text-good'"
-          >{{ formatRate(row.amount) }}</span>
-        </li>
-        <li
-          v-if="breakdown.eaten"
-          class="flex justify-between gap-4 border-t border-snow/10 pt-1 text-[13px]"
-        >
-          <span class="text-mist">{{ t('supplies.eaten') }}</span>
-          <span class="num text-danger">−{{ breakdown.eaten }}</span>
-        </li>
-        <li
-          v-if="!breakdown.rows.length && !breakdown.eaten"
-          class="text-[13px] text-fog"
-        >
-          {{ t('supplies.steady') }}
-        </li>
-      </ul>
-    </div>
-
-    <ul class="space-y-1">
-      <li
-        v-for="row in resources"
-        :key="row.id"
-        class="-mx-2 flex cursor-default items-center gap-3 rounded-[2px] px-2 py-0.5 whitespace-nowrap transition-colors hover:bg-snow/5"
-        @mouseenter="hovered = row.id"
-        @mouseleave="hovered = null"
-      >
-        <ResourceIcon
-          :id="row.id"
-          :size="19"
-        />
-        <span class="flex-1 text-[15px] text-mist">{{ row.name }}</span>
-        <span
-          class="num min-w-14 text-right text-[13px]"
-          :class="row.tone"
-        >{{ row.note }}</span>
-        <span class="num w-12 text-right text-2xl leading-none">{{ row.value }}</span>
-      </li>
-    </ul>
-
-    <div class="my-3 border-t border-snow/10" />
-    <ul class="space-y-2">
-      <li
-        v-for="row in people"
-        :key="row.id"
-        class="flex items-center gap-3 whitespace-nowrap"
-      >
-        <component
-          :is="row.icon"
-          :size="19"
-          :stroke-width="1.6"
-          :class="row.iconTone"
-        />
-        <span class="flex-1 text-[15px] text-mist">{{ row.name }}</span>
-        <span
-          class="num min-w-14 text-right text-[13px]"
-          :class="row.tone"
-        >{{ row.note }}</span>
-        <span class="num w-12 text-right text-2xl leading-none">{{ row.value }}</span>
-      </li>
-    </ul>
-  </section>
-</template>

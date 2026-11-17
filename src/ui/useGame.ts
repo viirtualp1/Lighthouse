@@ -10,9 +10,9 @@ import type { Effect, Message } from '@/game/state';
 import type { MapTarget, ViewState } from '@/render/GameRenderer';
 
 export interface Banner {
-  id: number;
-  title: Message;
-  subtitle: Message;
+  id: number
+  title: Message
+  subtitle: Message
 }
 
 const UI_REFRESH_SECONDS = 0.1;
@@ -33,7 +33,7 @@ const screen = ref<'menu' | 'game'>('menu');
 /** Whether a game has been started this visit, so the title screen can offer to continue it. */
 const hasGame = ref(false);
 /** Set by the map once it is drawn; lets HUD overlays point at things on the map. */
-const projector = shallowRef<((point: Point) => { x: number; y: number; scale: number }) | null>(null);
+const projector = shallowRef<((point: Point) => { x: number, y: number, scale: number }) | null>(null);
 const restartListeners: (() => void)[] = [];
 let sinceRefresh = 0;
 let bannerId = 0;

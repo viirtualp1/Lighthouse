@@ -1,54 +1,3 @@
-<script setup lang="ts">
-import { computed } from 'vue';
-import { Pause, Play } from '@lucide/vue';
-import { GAME } from '@/game/config';
-import { clockOf, nightHours } from '@/game/sim';
-import { useI18n } from 'vue-i18n';
-import { useGame } from './useGame';
-
-const SPEEDS = [1, 2, 3];
-const DIAL = 30;
-
-const game = useGame();
-const { t } = useI18n();
-
-const s = game.state;
-
-const dial = computed(() => {
-  const nightStart = 24 - nightHours(s.value);
-
-  return {
-    night: arc(nightStart, 24),
-    dusk: arc(nightStart - GAME.duskHours, nightStart),
-    hand: point(s.value.hour, DIAL - 3)
-  };
-});
-
-const untilNight = computed(() => {
-  const nightStart = 24 - nightHours(s.value);
-
-  if (s.value.phase === 'night') {
-    return t('top.untilDawn', { h: Math.ceil(24 - s.value.hour) });
-  }
-
-  return t('top.untilNight', { h: Math.max(0, Math.ceil(nightStart - s.value.hour)) });
-});
-
-function point (hour: number, r: number) {
-  const a = (hour / 24) * Math.PI * 2 - Math.PI / 2;
-
-  return { x: Math.cos(a) * r, y: Math.sin(a) * r };
-}
-
-function arc (from: number, to: number) {
-  const a = point(from, DIAL);
-  const b = point(to, DIAL);
-  const large = to - from > 12 ? 1 : 0;
-
-  return `M 0 0 L ${a.x} ${a.y} A ${DIAL} ${DIAL} 0 ${large} 1 ${b.x} ${b.y} Z`;
-}
-</script>
-
 <template>
   <header class="plate pointer-events-auto absolute top-4 left-1/2 flex -translate-x-1/2 items-center gap-4 px-3 py-2.5">
     <svg
@@ -99,19 +48,19 @@ function arc (from: number, to: number) {
 
     <div class="flex w-[170px] flex-col gap-1 whitespace-nowrap">
       <div class="flex items-baseline gap-2.5">
-        <span class="num text-2xl leading-none">{{ clockOf(s.hour) }}</span>
-        <span class="display text-xl leading-none">{{ t(`phase.${s.phase}`) }} {{ Math.min(s.day, GAME.daysToWin) }}</span>
-        <span class="label">{{ t('top.of', { total: GAME.daysToWin }) }}</span>
+        <span class="font-hud text-2xl leading-none font-medium lining-nums tabular-nums">{{ clockOf(s.hour) }}</span>
+        <span class="font-display text-xl leading-none font-semibold">{{ t(`phase.${s.phase}`) }} {{ Math.min(s.day, GAME.daysToWin) }}</span>
+        <span class="font-hud text-[11px] font-medium tracking-[0.12em] text-mist uppercase">{{ t('top.of', { total: GAME.daysToWin }) }}</span>
       </div>
-      <span class="label text-[10px]">{{ untilNight }}</span>
+      <span class="font-hud text-[10px] font-medium tracking-[0.12em] text-mist uppercase">{{ untilNight }}</span>
     </div>
 
     <div class="h-10 w-px bg-snow/15" />
 
     <div class="flex gap-1">
       <button
-        class="hud-btn h-8 w-8"
-        :class="{ on: s.speed === 0 }"
+        class="inline-flex size-8 hud-btn items-center justify-center gap-1.5 text-[12px]"
+        :aria-pressed="s.speed === 0"
         :title="t('top.pause')"
         @click="game.togglePause()"
       >
@@ -127,8 +76,8 @@ function arc (from: number, to: number) {
       <button
         v-for="speed in SPEEDS"
         :key="speed"
-        class="hud-btn h-8 w-9"
-        :class="{ on: s.speed === speed }"
+        class="inline-flex h-8 w-9 hud-btn items-center justify-center gap-1.5 text-[12px]"
+        :aria-pressed="s.speed === speed"
         :title="t('top.speed', { n: speed })"
         @click="game.setSpeed(speed)"
       >
@@ -137,3 +86,54 @@ function arc (from: number, to: number) {
     </div>
   </header>
 </template>
+
+<script setup lang="ts">
+import { computed } from 'vue';
+import { Pause, Play } from '@lucide/vue';
+import { GAME } from '@/game/config';
+import { clockOf, nightHours } from '@/game/sim';
+import { useI18n } from 'vue-i18n';
+import { useGame } from './useGame';
+
+const SPEEDS = [1, 2, 3];
+const DIAL = 30;
+
+const game = useGame();
+const { t } = useI18n();
+
+const s = game.state;
+
+const dial = computed(() => {
+  const nightStart = 24 - nightHours(s.value);
+
+  return {
+    night: arc(nightStart, 24),
+    dusk: arc(nightStart - GAME.duskHours, nightStart),
+    hand: point(s.value.hour, DIAL - 3)
+  };
+});
+
+const untilNight = computed(() => {
+  const nightStart = 24 - nightHours(s.value);
+
+  if (s.value.phase === 'night') {
+    return t('top.untilDawn', { h: Math.ceil(24 - s.value.hour) });
+  }
+
+  return t('top.untilNight', { h: Math.max(0, Math.ceil(nightStart - s.value.hour)) });
+});
+
+function point (hour: number, r: number) {
+  const a = (hour / 24) * Math.PI * 2 - Math.PI / 2;
+
+  return { x: Math.cos(a) * r, y: Math.sin(a) * r };
+}
+
+function arc (from: number, to: number) {
+  const a = point(from, DIAL);
+  const b = point(to, DIAL);
+  const large = to - from > 12 ? 1 : 0;
+
+  return `M 0 0 L ${a.x} ${a.y} A ${DIAL} ${DIAL} 0 ${large} 1 ${b.x} ${b.y} Z`;
+}
+</script>

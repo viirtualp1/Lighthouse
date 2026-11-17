@@ -8,16 +8,16 @@ import type { GameState } from '@/game/state';
 
 export interface TutorialStep {
   /** Its texts live under `tutorial.steps.<id>` in the dictionaries. */
-  id: string;
-  hasTask?: boolean;
+  id: string
+  hasTask?: boolean
   /** The building this task is about: when the player opens it, the focus moves to its card. */
-  subject?: BuildingId;
+  subject?: BuildingId
   /** A HUD element to point at, by its `data-tour` name. */
-  target?: string;
+  target?: string
   /** A spot on the map to point at. */
-  spot?: (state: GameState) => Point | null;
+  spot?: (state: GameState) => Point | null
   /** The step finishes on its own once this holds; steps without it wait for "Next". */
-  done?: (state: GameState) => boolean;
+  done?: (state: GameState) => boolean
 }
 
 const DONE_KEY = 'lighthouse.tutorialDone';

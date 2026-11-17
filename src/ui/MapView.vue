@@ -1,3 +1,42 @@
+<template>
+  <div class="absolute inset-0">
+    <div
+      ref="host"
+      class="absolute inset-0"
+      :class="game.view.placing || game.view.aiming ? 'cursor-crosshair' : 'cursor-grab active:cursor-grabbing'"
+    />
+    <div class="pointer-events-none absolute inset-0 shadow-[inset_0_0_180px_rgba(0,0,0,0.9)]" />
+
+    <p
+      v-if="hint"
+      class="plate pointer-events-none absolute top-28 left-1/2 -translate-x-1/2 px-5 py-2 text-[14px] whitespace-nowrap text-snow"
+    >
+      {{ hint }}
+    </p>
+
+    <div
+      v-if="tooltip"
+      class="plate pointer-events-none fixed z-10 px-3.5 py-2.5 whitespace-nowrap"
+      :style="{ left: `${tooltip.x}px`, top: `${tooltip.y}px` }"
+    >
+      <div class="font-display text-xl leading-tight font-semibold">
+        {{ tooltip.title }}
+      </div>
+      <p
+        v-for="line in tooltip.lines"
+        :key="line.text"
+        class="mt-0.5 flex items-center gap-1.5 text-[14px]"
+        :class="line.tone"
+      >
+        <ResourceIcon
+          v-if="line.resource"
+          :id="line.resource"
+        />{{ line.text }}
+      </p>
+    </div>
+  </div>
+</template>
+
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, useTemplateRef } from 'vue';
 import { BUILDINGS, RESTORATION } from '@/game/config';
@@ -64,7 +103,7 @@ const tooltip = computed(() => {
     return null;
   }
 
-  const lines: { text: string; tone: string; resource?: ResourceId }[] = [];
+  const lines: { text: string, tone: string, resource?: ResourceId }[] = [];
   const building = s.buildings.find(b => b.slot === slot.id);
   let title = t('map.freeSpot');
 
@@ -139,42 +178,3 @@ onBeforeUnmount(() => {
   renderer = null;
 });
 </script>
-
-<template>
-  <div class="absolute inset-0">
-    <div
-      ref="host"
-      class="absolute inset-0"
-      :class="game.view.placing || game.view.aiming ? 'cursor-crosshair' : 'cursor-grab active:cursor-grabbing'"
-    />
-    <div class="pointer-events-none absolute inset-0 shadow-[inset_0_0_180px_rgba(0,0,0,0.9)]" />
-
-    <p
-      v-if="hint"
-      class="plate pointer-events-none absolute top-28 left-1/2 -translate-x-1/2 px-5 py-2 text-[14px] whitespace-nowrap text-snow"
-    >
-      {{ hint }}
-    </p>
-
-    <div
-      v-if="tooltip"
-      class="plate pointer-events-none fixed z-10 px-3.5 py-2.5 whitespace-nowrap"
-      :style="{ left: `${tooltip.x}px`, top: `${tooltip.y}px` }"
-    >
-      <div class="display text-xl leading-tight">
-        {{ tooltip.title }}
-      </div>
-      <p
-        v-for="line in tooltip.lines"
-        :key="line.text"
-        class="mt-0.5 flex items-center gap-1.5 text-[14px]"
-        :class="line.tone"
-      >
-        <ResourceIcon
-          v-if="line.resource"
-          :id="line.resource"
-        />{{ line.text }}
-      </p>
-    </div>
-  </div>
-</template>

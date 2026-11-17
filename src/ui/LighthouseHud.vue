@@ -1,44 +1,6 @@
-<script setup lang="ts">
-import { computed } from 'vue';
-import { Crosshair, Hammer, RotateCcw, RotateCw, User } from '@lucide/vue';
-import { BEAM_MODES, RESTORATION } from '@/game/config';
-import { lighthouseReach } from '@/game/light';
-import { forecast } from '@/game/sim';
-import { useI18n } from 'vue-i18n';
-import ResourceIcon from './ResourceIcon.vue';
-import { useGame } from './useGame';
-import type { BeamMode } from '@/game/config';
-
-const MODES = Object.entries(BEAM_MODES) as [BeamMode, (typeof BEAM_MODES)[BeamMode]][];
-
-const game = useGame();
-const { t } = useI18n();
-
-const s = game.state;
-
-const keepers = computed(() => s.value.buildings.find(b => b.type === 'lighthouse')!);
-
-/**
- * How many of the coming nights the oil in store will carry the Lighthouse through, one segment per night, the
- * first segment being tonight. A part-filled segment is a night the oil runs out in.
- */
-const supply = computed(() => {
-  let left = s.value.resources.oil;
-
-  const nights = forecast(s.value, 5).map(n => {
-    const share = Math.max(0, Math.min(1, left / Math.max(1, n.oil)));
-    left -= n.oil;
-
-    return { ...n, share };
-  });
-
-  return { nights, covered: nights.filter(n => n.share >= 1).length };
-});
-</script>
-
 <template>
   <section class="plate pointer-events-auto absolute bottom-4 left-4 flex w-80 flex-col gap-3 p-4">
-    <h2 class="display text-3xl leading-none">
+    <h2 class="font-display text-3xl leading-none font-semibold">
       {{ t('lighthouse.title') }}
     </h2>
 
@@ -49,8 +11,8 @@ const supply = computed(() => {
       <button
         v-for="[id, mode] in MODES"
         :key="id"
-        class="hud-btn h-9"
-        :class="{ on: s.mode === id }"
+        class="inline-flex h-9 hud-btn items-center justify-center gap-1.5 text-[12px]"
+        :aria-pressed="s.mode === id"
         :title="`${t(`modes.${id}.hint`)} · ${mode.oilPerHour}${t('supplies.perHour')}`"
         @click="game.setMode(id)"
       >
@@ -63,21 +25,21 @@ const supply = computed(() => {
       class="flex gap-1"
     >
       <button
-        class="hud-btn h-8 flex-1"
-        :class="{ on: game.view.aiming }"
+        class="inline-flex h-8 flex-1 hud-btn items-center justify-center gap-1.5 text-[12px]"
+        :aria-pressed="game.view.aiming"
         @click="game.startAiming()"
       >
         <Crosshair :size="14" />{{ t('lighthouse.aim') }}
       </button>
       <button
-        class="hud-btn h-8 w-9"
+        class="inline-flex h-8 w-9 hud-btn items-center justify-center gap-1.5 text-[12px]"
         :title="t('lighthouse.rotateLeft')"
         @click="game.rotateBeam(-1)"
       >
         <RotateCcw :size="14" />
       </button>
       <button
-        class="hud-btn h-8 w-9"
+        class="inline-flex h-8 w-9 hud-btn items-center justify-center gap-1.5 text-[12px]"
         :title="t('lighthouse.rotateRight')"
         @click="game.rotateBeam(1)"
       >
@@ -119,7 +81,7 @@ const supply = computed(() => {
         <button
           v-for="i in 2"
           :key="i"
-          class="grid h-8 w-8 cursor-pointer place-items-center rounded-[2px] transition-colors hover:bg-snow/10"
+          class="grid size-8 cursor-pointer place-items-center rounded-[2px] transition-colors hover:bg-snow/10"
           @click="game.setWorkers(keepers.id, keepers.workers === i ? i - 1 : i)"
         >
           <User
@@ -134,15 +96,53 @@ const supply = computed(() => {
         >{{ t('lighthouse.reachShort') }}</span>
       </div>
       <button
-        class="hud-btn h-8 px-3 whitespace-nowrap"
+        class="inline-flex h-8 hud-btn items-center justify-center gap-1.5 px-3 text-[12px] whitespace-nowrap"
         :title="t('restoration.title')"
         @mouseenter="game.view.previewStage = true"
         @mouseleave="game.view.previewStage = false"
         @click="game.selectLighthouse()"
       >
         <Hammer :size="14" />{{ t('restoration.open') }}
-        <span class="num text-mist">{{ s.restoration.stage }}/{{ RESTORATION.length }}</span>
+        <span class="font-hud font-medium text-mist lining-nums tabular-nums">{{ s.restoration.stage }}/{{ RESTORATION.length }}</span>
       </button>
     </div>
   </section>
 </template>
+
+<script setup lang="ts">
+import { computed } from 'vue';
+import { Crosshair, Hammer, RotateCcw, RotateCw, User } from '@lucide/vue';
+import { BEAM_MODES, RESTORATION } from '@/game/config';
+import { lighthouseReach } from '@/game/light';
+import { forecast } from '@/game/sim';
+import { useI18n } from 'vue-i18n';
+import ResourceIcon from './ResourceIcon.vue';
+import { useGame } from './useGame';
+import type { BeamMode } from '@/game/config';
+
+const MODES = Object.entries(BEAM_MODES) as [BeamMode, (typeof BEAM_MODES)[BeamMode]][];
+
+const game = useGame();
+const { t } = useI18n();
+
+const s = game.state;
+
+const keepers = computed(() => s.value.buildings.find(b => b.type === 'lighthouse')!);
+
+/**
+ * How many of the coming nights the oil in store will carry the Lighthouse through, one segment per night, the
+ * first segment being tonight. A part-filled segment is a night the oil runs out in.
+ */
+const supply = computed(() => {
+  let left = s.value.resources.oil;
+
+  const nights = forecast(s.value, 5).map(n => {
+    const share = Math.max(0, Math.min(1, left / Math.max(1, n.oil)));
+    left -= n.oil;
+
+    return { ...n, share };
+  });
+
+  return { nights, covered: nights.filter(n => n.share >= 1).length };
+});
+</script>

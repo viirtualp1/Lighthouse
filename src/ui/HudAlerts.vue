@@ -1,3 +1,44 @@
+<template>
+  <aside
+    class="pointer-events-none absolute top-4 right-4 flex flex-col items-end gap-1.5"
+    data-tour="alerts"
+  >
+    <TransitionGroup
+      enter-from-class="opacity-0 translate-x-4"
+      enter-active-class="transition duration-300"
+      leave-to-class="opacity-0"
+      leave-active-class="transition duration-200 absolute"
+    >
+      <button
+        v-for="alert in alerts"
+        :key="alert.id"
+        class="plate pointer-events-auto relative flex items-center gap-3 px-3 py-2.5 text-left whitespace-nowrap transition-colors hover:border-snow/40"
+        @click="alert.run()"
+      >
+        <span
+          class="grid size-7 shrink-0 place-items-center rounded-full border"
+          :class="alert.severe ? 'border-danger/60 bg-danger/15' : 'border-snow/20 bg-snow/5'"
+        >
+          <ResourceIcon
+            v-if="alert.resource"
+            :id="alert.resource"
+            :size="15"
+          />
+          <component
+            :is="alert.icon ?? TriangleExclamationPoint"
+            v-else
+            :size="15"
+            :stroke-width="1.7"
+            :class="alert.severe ? 'text-danger' : 'text-mist'"
+          />
+        </span>
+        <span class="flex-1 text-[14px] leading-snug">{{ alert.text }}</span>
+        <span class="flex shrink-0 items-center font-hud text-[11px] font-medium tracking-[0.12em] text-snow uppercase">{{ alert.action }}<ChevronRight :size="14" /></span>
+      </button>
+    </TransitionGroup>
+  </aside>
+</template>
+
 <script setup lang="ts">
 import { computed } from 'vue';
 import { BedDouble, ChevronRight, Eye, Ghost, HeartPulse, TriangleExclamationPoint, Users } from '@lucide/vue';
@@ -11,13 +52,13 @@ import type { Component } from 'vue';
 import type { BuildingId, ResourceId } from '@/game/config';
 
 interface Alert {
-  id: string;
-  resource?: ResourceId;
-  icon?: Component;
-  text: string;
-  severe: boolean;
-  action: string;
-  run: () => void;
+  id: string
+  resource?: ResourceId
+  icon?: Component
+  text: string
+  severe: boolean
+  action: string
+  run: () => void
 }
 
 const LIMIT = 5;
@@ -149,44 +190,3 @@ function assignIdle () {
   }
 }
 </script>
-
-<template>
-  <aside
-    class="pointer-events-none absolute top-4 right-4 flex flex-col items-end gap-1.5"
-    data-tour="alerts"
-  >
-    <TransitionGroup
-      enter-from-class="opacity-0 translate-x-4"
-      enter-active-class="transition duration-300"
-      leave-to-class="opacity-0"
-      leave-active-class="transition duration-200 absolute"
-    >
-      <button
-        v-for="alert in alerts"
-        :key="alert.id"
-        class="plate pointer-events-auto flex items-center gap-3 px-3 py-2.5 text-left whitespace-nowrap transition-colors hover:border-snow/40"
-        @click="alert.run()"
-      >
-        <span
-          class="grid h-7 w-7 shrink-0 place-items-center rounded-full border"
-          :class="alert.severe ? 'border-danger/60 bg-danger/15' : 'border-snow/20 bg-snow/5'"
-        >
-          <ResourceIcon
-            v-if="alert.resource"
-            :id="alert.resource"
-            :size="15"
-          />
-          <component
-            :is="alert.icon ?? TriangleExclamationPoint"
-            v-else
-            :size="15"
-            :stroke-width="1.7"
-            :class="alert.severe ? 'text-danger' : 'text-mist'"
-          />
-        </span>
-        <span class="flex-1 text-[14px] leading-snug">{{ alert.text }}</span>
-        <span class="label flex shrink-0 items-center text-snow">{{ alert.action }}<ChevronRight :size="14" /></span>
-      </button>
-    </TransitionGroup>
-  </aside>
-</template>

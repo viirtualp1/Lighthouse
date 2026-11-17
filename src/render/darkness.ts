@@ -4,30 +4,30 @@ import { MAX_LANTERNS } from '@/game/light';
 import type { LightParams } from '@/game/light';
 
 export interface DarknessFrame {
-  light: LightParams;
-  frontPx: number;
-  night: number;
-  time: number;
+  light: LightParams
+  frontPx: number
+  night: number
+  time: number
   /** Direction of the Lighthouse's turning lamp; purely visual, the light's reach does not depend on it. */
-  sweep: number;
+  sweep: number
   /** The lamp's brightness wobble, around 1. */
-  flicker: number;
+  flicker: number
 }
 
 interface DarknessUniforms {
-  uSize: Float32Array;
-  uOrigin: Float32Array;
-  uLight: Float32Array;
-  uBeam: Float32Array;
-  uLanternR: Float32Array;
-  uLanternCount: number;
-  uLanterns: Float32Array;
-  uFront: number;
-  uNight: number;
-  uTime: number;
-  uUnit: number;
-  uSweep: number;
-  uFlicker: number;
+  uSize: Float32Array
+  uOrigin: Float32Array
+  uLight: Float32Array
+  uBeam: Float32Array
+  uLanternR: Float32Array
+  uLanternCount: number
+  uLanterns: Float32Array
+  uFront: number
+  uNight: number
+  uTime: number
+  uUnit: number
+  uSweep: number
+  uFlicker: number
 }
 
 /** How far past the map's edge the darkness reaches, so zooming out never shows its border. */

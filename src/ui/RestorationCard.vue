@@ -1,3 +1,135 @@
+<template>
+  <section
+    v-if="open"
+    class="plate pointer-events-auto relative w-80 p-4"
+    data-tour="restoration"
+  >
+    <header class="flex items-start gap-2">
+      <div class="min-w-0 flex-1">
+        <div class="font-hud text-[11px] font-medium tracking-[0.12em] text-mist uppercase">
+          {{ t('restoration.title') }}
+        </div>
+        <h2 class="mt-1 font-display text-3xl leading-none font-semibold">
+          {{ card ? t(`restoration.stages.${card.stage.id}.name`) : t('buildings.lighthouse.name') }}
+        </h2>
+      </div>
+      <button
+        class="inline-flex size-7 shrink-0 hud-btn items-center justify-center gap-1.5 border-transparent text-[12px]"
+        :aria-label="t('card.close')"
+        @click="close"
+      >
+        <X :size="14" />
+      </button>
+    </header>
+
+    <ol class="mt-3 flex gap-1">
+      <li
+        v-for="(stage, i) in RESTORATION"
+        :key="stage.id"
+        class="h-1.5 flex-1 rounded-[1px]"
+        :class="i < s.restoration.stage ? 'bg-warm' : i === s.restoration.stage ? 'bg-warm/30' : 'bg-snow/10'"
+        :title="t(`restoration.stages.${stage.id}.name`)"
+      />
+    </ol>
+
+    <template v-if="card">
+      <p class="mt-3 text-[13px] text-mist">
+        {{ t(`restoration.stages.${card.stage.id}.desc`) }}
+      </p>
+      <p class="mt-1 text-[13px] text-warm">
+        {{ t('restoration.gain', { n: card.stage.rings }) }}<span v-if="card.stage.oilSaving"> · {{ t('restoration.saving', { n: Math.round(card.stage.oilSaving * 100) }) }}</span>
+      </p>
+
+      <div
+        v-if="!card.started"
+        class="mt-4 flex items-center justify-between gap-3 border-t border-snow/10 pt-3"
+        @mouseenter="game.view.previewStage = true"
+        @mouseleave="game.view.previewStage = false"
+      >
+        <span class="flex items-center gap-3">
+          <span
+            v-for="c in card.cost"
+            :key="c.id"
+            class="flex items-center gap-1 font-hud text-[15px] font-medium lining-nums tabular-nums"
+            :class="c.short ? 'text-danger' : 'text-snow'"
+          >
+            <ResourceIcon
+              :id="c.id"
+              :size="15"
+            />{{ c.amount }}
+          </span>
+        </span>
+        <button
+          class="inline-flex h-8 hud-btn items-center justify-center gap-1.5 px-3 text-[12px]"
+          data-primary
+          :disabled="!card.canStart"
+          @click="game.startStage()"
+        >
+          {{ t('restoration.deliver') }}
+        </button>
+      </div>
+
+      <template v-else>
+        <div class="mt-4 border-t border-snow/10 pt-3">
+          <div class="h-2 overflow-hidden rounded-[1px] border border-warm/40">
+            <div
+              class="h-full bg-warm transition-[width] duration-300"
+              :style="{ width: `${card.progress * 100}%` }"
+            />
+          </div>
+          <p
+            class="mt-1.5 text-[12px]"
+            :class="card.hoursLeft === null ? 'text-danger' : 'text-mist'"
+          >
+            {{ card.hoursLeft === null ? t('restoration.noBuilders') : t('restoration.hoursLeft', { h: card.hoursLeft }) }}
+          </p>
+        </div>
+
+        <div class="mt-3 flex items-center gap-2">
+          <button
+            class="inline-flex size-8 hud-btn items-center justify-center gap-1.5 text-[12px]"
+            :aria-label="t('restoration.builders')"
+            @click="game.setBuilders(s.restoration.builders - 1)"
+          >
+            <Minus :size="13" />
+          </button>
+          <div
+            class="flex flex-1 justify-center gap-0.5"
+            :title="`${t('restoration.builders')} · ${t('card.free', { n: card.free })}`"
+          >
+            <button
+              v-for="(filled, i) in card.builders"
+              :key="i"
+              class="grid h-8 w-7 cursor-pointer place-items-center rounded-[2px] transition-colors hover:bg-snow/10"
+              @click="setTo(i)"
+            >
+              <User
+                :size="18"
+                :stroke-width="1.6"
+                :class="filled ? 'fill-snow text-snow' : 'text-snow/30'"
+              />
+            </button>
+          </div>
+          <button
+            class="inline-flex size-8 hud-btn items-center justify-center gap-1.5 text-[12px]"
+            :disabled="card.free <= 0"
+            @click="game.setBuilders(s.restoration.builders + 1)"
+          >
+            <Plus :size="13" />
+          </button>
+        </div>
+      </template>
+    </template>
+
+    <p
+      v-else
+      class="mt-3 text-[14px] text-warm"
+    >
+      {{ t('restoration.done') }}
+    </p>
+  </section>
+</template>
+
 <script setup lang="ts">
 import { computed } from 'vue';
 import { Minus, Plus, User, X } from '@lucide/vue';
@@ -54,134 +186,3 @@ function close () {
   game.select(null);
 }
 </script>
-
-<template>
-  <section
-    v-if="open"
-    class="plate pointer-events-auto w-80 p-4"
-    data-tour="restoration"
-  >
-    <header class="flex items-start gap-2">
-      <div class="min-w-0 flex-1">
-        <div class="label">
-          {{ t('restoration.title') }}
-        </div>
-        <h2 class="display mt-1 text-3xl leading-none">
-          {{ card ? t(`restoration.stages.${card.stage.id}.name`) : t('buildings.lighthouse.name') }}
-        </h2>
-      </div>
-      <button
-        class="hud-btn h-7 w-7 shrink-0 border-transparent"
-        :aria-label="t('card.close')"
-        @click="close"
-      >
-        <X :size="14" />
-      </button>
-    </header>
-
-    <ol class="mt-3 flex gap-1">
-      <li
-        v-for="(stage, i) in RESTORATION"
-        :key="stage.id"
-        class="h-1.5 flex-1 rounded-[1px]"
-        :class="i < s.restoration.stage ? 'bg-warm' : i === s.restoration.stage ? 'bg-warm/30' : 'bg-snow/10'"
-        :title="t(`restoration.stages.${stage.id}.name`)"
-      />
-    </ol>
-
-    <template v-if="card">
-      <p class="mt-3 text-[13px] text-mist">
-        {{ t(`restoration.stages.${card.stage.id}.desc`) }}
-      </p>
-      <p class="mt-1 text-[13px] text-warm">
-        {{ t('restoration.gain', { n: card.stage.rings }) }}<span v-if="card.stage.oilSaving"> · {{ t('restoration.saving', { n: Math.round(card.stage.oilSaving * 100) }) }}</span>
-      </p>
-
-      <div
-        v-if="!card.started"
-        class="mt-4 flex items-center justify-between gap-3 border-t border-snow/10 pt-3"
-        @mouseenter="game.view.previewStage = true"
-        @mouseleave="game.view.previewStage = false"
-      >
-        <span class="flex items-center gap-3">
-          <span
-            v-for="c in card.cost"
-            :key="c.id"
-            class="num flex items-center gap-1 text-[15px]"
-            :class="c.short ? 'text-danger' : 'text-snow'"
-          >
-            <ResourceIcon
-              :id="c.id"
-              :size="15"
-            />{{ c.amount }}
-          </span>
-        </span>
-        <button
-          class="hud-btn on h-8 px-3"
-          :disabled="!card.canStart"
-          @click="game.startStage()"
-        >
-          {{ t('restoration.deliver') }}
-        </button>
-      </div>
-
-      <template v-else>
-        <div class="mt-4 border-t border-snow/10 pt-3">
-          <div class="h-2 overflow-hidden rounded-[1px] border border-warm/40">
-            <div
-              class="h-full bg-warm transition-[width] duration-300"
-              :style="{ width: `${card.progress * 100}%` }"
-            />
-          </div>
-          <p
-            class="mt-1.5 text-[12px]"
-            :class="card.hoursLeft === null ? 'text-danger' : 'text-mist'"
-          >
-            {{ card.hoursLeft === null ? t('restoration.noBuilders') : t('restoration.hoursLeft', { h: card.hoursLeft }) }}
-          </p>
-        </div>
-
-        <div class="mt-3 flex items-center gap-2">
-          <button
-            class="hud-btn h-8 w-8"
-            :aria-label="t('restoration.builders')"
-            @click="game.setBuilders(s.restoration.builders - 1)"
-          >
-            <Minus :size="13" />
-          </button>
-          <div
-            class="flex flex-1 justify-center gap-0.5"
-            :title="`${t('restoration.builders')} · ${t('card.free', { n: card.free })}`"
-          >
-            <button
-              v-for="(filled, i) in card.builders"
-              :key="i"
-              class="grid h-8 w-7 cursor-pointer place-items-center rounded-[2px] transition-colors hover:bg-snow/10"
-              @click="setTo(i)"
-            >
-              <User
-                :size="18"
-                :stroke-width="1.6"
-                :class="filled ? 'fill-snow text-snow' : 'text-snow/30'"
-              />
-            </button>
-          </div>
-          <button
-            class="hud-btn h-8 w-8"
-            :disabled="card.free <= 0"
-            @click="game.setBuilders(s.restoration.builders + 1)"
-          >
-            <Plus :size="13" />
-          </button>
-        </div>
-      </template>
-    </template>
-
-    <p
-      v-else
-      class="mt-3 text-[14px] text-warm"
-    >
-      {{ t('restoration.done') }}
-    </p>
-  </section>
-</template>

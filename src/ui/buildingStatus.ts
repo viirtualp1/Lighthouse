@@ -4,8 +4,8 @@ import { lightAt, shadowAt } from '@/game/sim';
 import type { Building, GameState } from '@/game/state';
 
 export interface BuildingStatus {
-  key: string;
-  tone: string;
+  key: string
+  tone: string
 }
 
 /**

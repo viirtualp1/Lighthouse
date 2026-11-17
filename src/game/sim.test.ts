@@ -153,7 +153,6 @@ describe('finds', () => {
     const oil = state.resources.oil;
     collectFind(state, find.id);
 
-
     expect(find.collected).toBe(true);
     expect(state.resources.oil).toBe(oil + (find.reward.oil ?? 0));
   });

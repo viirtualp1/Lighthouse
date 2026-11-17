@@ -1,3 +1,110 @@
+<template>
+  <nav class="pointer-events-none absolute bottom-4 left-1/2 flex -translate-x-1/2 flex-col items-center gap-2">
+    <div
+      v-if="tip"
+      class="plate relative w-80 px-4 py-3"
+    >
+      <div class="font-display text-2xl leading-none font-semibold">
+        {{ t(`buildings.${tip.id}.name`) }}
+      </div>
+      <p class="mt-1 text-[13px] text-mist">
+        {{ t(`buildings.${tip.id}.hint`) }}
+      </p>
+      <div class="mt-2 flex gap-3">
+        <span
+          v-for="c in tip.cost"
+          :key="c.id"
+          class="flex items-center gap-1.5 font-hud text-[14px] font-medium lining-nums tabular-nums"
+          :class="c.short ? 'text-danger' : 'text-snow'"
+        >
+          <ResourceIcon
+            :id="c.id"
+            :size="15"
+          />{{ c.amount }} <span class="font-hud text-[11px] font-medium tracking-[0.12em] text-mist uppercase">{{ c.name }}</span>
+        </span>
+        <span
+          v-if="tip.def.maxWorkers"
+          class="ml-auto font-hud text-[13px] font-medium text-mist lining-nums tabular-nums"
+        >{{ t('build.upTo', { n: tip.def.maxWorkers }) }}</span>
+      </div>
+    </div>
+
+    <div class="flex items-stretch gap-2">
+      <div class="plate pointer-events-auto relative flex items-stretch p-1.5">
+        <section
+          v-for="(group, g) in groups"
+          :key="group.id"
+          class="flex flex-col px-1.5"
+          :title="t(`build.groups.${group.id}`)"
+          :class="{ 'border-l border-snow/10': g > 0 }"
+        >
+          <div class="flex gap-1">
+            <button
+              v-for="item in group.items"
+              :key="item.id"
+              class="inline-flex h-16 min-w-18 hud-btn flex-col items-center justify-center gap-1 px-2.5 text-[12px] tracking-normal whitespace-nowrap normal-case"
+              :aria-pressed="game.view.placing === item.id"
+              :disabled="!item.affordable && game.view.placing !== item.id"
+              :data-tour="`build-${item.id}`"
+              @mouseenter="hovered = item.id"
+              @mouseleave="hovered = null"
+              @click="game.startPlacing(item.id)"
+            >
+              <component
+                :is="item.icon"
+                :size="24"
+                :stroke-width="1.5"
+              />
+              <span class="text-[11px] leading-tight">{{ t(`buildings.${item.id}.name`) }}</span>
+            </button>
+          </div>
+        </section>
+      </div>
+
+      <div class="plate pointer-events-auto relative flex items-end gap-1 p-1.5">
+        <button
+          class="inline-flex h-16 min-w-16 hud-btn flex-col items-center justify-center gap-1 px-2.5 text-[12px] tracking-normal whitespace-nowrap normal-case"
+          :aria-pressed="game.menuOpen.value"
+          :title="t('menu.open')"
+          @click="game.openMenu()"
+        >
+          <Menu
+            :size="22"
+            :stroke-width="1.5"
+          />
+          <span class="text-[11px] leading-tight">{{ t('menu.label') }} · Esc</span>
+        </button>
+        <button
+          class="inline-flex h-16 w-12 hud-btn flex-col items-center justify-center gap-1.5 text-[12px]"
+          :title="t('menu.tutorial')"
+          @click="tutorial.start()"
+        >
+          <GraduationCap
+            :size="20"
+            :stroke-width="1.5"
+          />
+        </button>
+        <button
+          class="inline-flex h-16 w-12 hud-btn flex-col items-center justify-center gap-1.5 text-[12px]"
+          :title="t('menu.sound')"
+          @click="settings.toggleMute()"
+        >
+          <VolumeX
+            v-if="settings.muted.value"
+            :size="20"
+            :stroke-width="1.5"
+          />
+          <Volume2
+            v-else
+            :size="20"
+            :stroke-width="1.5"
+          />
+        </button>
+      </div>
+    </div>
+  </nav>
+</template>
+
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { Anchor, Axe, Church, Cross, Flame, Fuel, GraduationCap, House, Lamp, Menu, Volume2, VolumeX, Wrench } from '@lucide/vue';
@@ -58,110 +165,3 @@ const tip = computed(() => {
   return { id, def, cost };
 });
 </script>
-
-<template>
-  <nav class="pointer-events-none absolute bottom-4 left-1/2 flex -translate-x-1/2 flex-col items-center gap-2">
-    <div
-      v-if="tip"
-      class="plate w-80 px-4 py-3"
-    >
-      <div class="display text-2xl leading-none">
-        {{ t(`buildings.${tip.id}.name`) }}
-      </div>
-      <p class="mt-1 text-[13px] text-mist">
-        {{ t(`buildings.${tip.id}.hint`) }}
-      </p>
-      <div class="mt-2 flex gap-3">
-        <span
-          v-for="c in tip.cost"
-          :key="c.id"
-          class="num flex items-center gap-1.5 text-[14px]"
-          :class="c.short ? 'text-danger' : 'text-snow'"
-        >
-          <ResourceIcon
-            :id="c.id"
-            :size="15"
-          />{{ c.amount }} <span class="label">{{ c.name }}</span>
-        </span>
-        <span
-          v-if="tip.def.maxWorkers"
-          class="num ml-auto text-[13px] text-mist"
-        >{{ t('build.upTo', { n: tip.def.maxWorkers }) }}</span>
-      </div>
-    </div>
-
-    <div class="flex items-stretch gap-2">
-      <div class="plate pointer-events-auto flex items-stretch p-1.5">
-        <section
-          v-for="(group, g) in groups"
-          :key="group.id"
-          class="flex flex-col px-1.5"
-          :title="t(`build.groups.${group.id}`)"
-          :class="{ 'border-l border-snow/10': g > 0 }"
-        >
-          <div class="flex gap-1">
-            <button
-              v-for="item in group.items"
-              :key="item.id"
-              class="hud-btn h-16 min-w-[72px] flex-col gap-1 px-2.5 whitespace-nowrap normal-case tracking-normal"
-              :class="{ on: game.view.placing === item.id }"
-              :disabled="!item.affordable && game.view.placing !== item.id"
-              :data-tour="`build-${item.id}`"
-              @mouseenter="hovered = item.id"
-              @mouseleave="hovered = null"
-              @click="game.startPlacing(item.id)"
-            >
-              <component
-                :is="item.icon"
-                :size="24"
-                :stroke-width="1.5"
-              />
-              <span class="text-[11px] leading-tight">{{ t(`buildings.${item.id}.name`) }}</span>
-            </button>
-          </div>
-        </section>
-      </div>
-
-      <div class="plate pointer-events-auto flex items-end gap-1 p-1.5">
-        <button
-          class="hud-btn h-16 min-w-[64px] flex-col gap-1 px-2.5 whitespace-nowrap normal-case tracking-normal"
-          :class="{ on: game.menuOpen.value }"
-          :title="t('menu.open')"
-          @click="game.openMenu()"
-        >
-          <Menu
-            :size="22"
-            :stroke-width="1.5"
-          />
-          <span class="text-[11px] leading-tight">{{ t('menu.label') }} · Esc</span>
-        </button>
-        <button
-          class="hud-btn h-16 w-12 flex-col"
-          :title="t('menu.tutorial')"
-          @click="tutorial.start()"
-        >
-          <GraduationCap
-            :size="20"
-            :stroke-width="1.5"
-          />
-        </button>
-        <button
-          class="hud-btn h-16 w-12 flex-col"
-          :title="t('menu.sound')"
-          @click="settings.toggleMute()"
-        >
-          <VolumeX
-            v-if="settings.muted.value"
-            :size="20"
-            :stroke-width="1.5"
-          />
-          <Volume2
-            v-else
-            :size="20"
-            :stroke-width="1.5"
-          />
-        </button>
-      </div>
-    </div>
-  </nav>
-</template>

@@ -8,24 +8,24 @@ import type { Effect, GameState } from '@/game/state';
 type Layer = 'under' | 'glow' | 'over';
 
 interface Mote {
-  particle: Particle;
-  layer: Layer;
-  vx: number;
-  vy: number;
-  life: number;
-  maxLife: number;
-  peak: number;
-  grow: number;
-  baseScale: number;
+  particle: Particle
+  layer: Layer
+  vx: number
+  vy: number
+  life: number
+  maxLife: number
+  peak: number
+  grow: number
+  baseScale: number
   /** Ash dies the moment it drifts into light. */
-  fleesLight: boolean;
+  fleesLight: boolean
 }
 
 export interface ParticleFrame {
-  state: GameState;
-  light: LightParams;
-  night: number;
-  seconds: number;
+  state: GameState
+  light: LightParams
+  night: number
+  seconds: number
 }
 
 const LIMIT = 900;

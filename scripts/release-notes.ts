@@ -9,9 +9,9 @@ import { execFileSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 
 interface Commit {
-  type: string;
-  subject: string;
-  details: string[];
+  type: string
+  subject: string
+  details: string[]
 }
 
 const FIELD = '\u001f';

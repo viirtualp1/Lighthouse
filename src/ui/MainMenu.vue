@@ -1,3 +1,74 @@
+<template>
+  <div class="pointer-events-auto absolute inset-0 z-30 bg-[linear-gradient(90deg,rgba(0,0,0,0.88)_0%,rgba(0,0,0,0.55)_38%,rgba(0,0,0,0)_70%)]">
+    <!-- Pinned to a fixed spot: nothing here depends on what is open, so the menu never shifts. -->
+    <div class="absolute top-[28vh] left-[8vw]">
+      <h1 class="font-display text-8xl leading-none font-semibold whitespace-nowrap text-snow drop-shadow-[0_6px_30px_rgba(0,0,0,0.8)]">
+        {{ t('mainMenu.title') }}
+      </h1>
+
+      <div class="relative mt-12 w-72">
+        <nav class="flex flex-col items-start gap-1">
+          <button
+            v-if="canContinue"
+            class="menu-item"
+            @click="game.continueGame()"
+          >
+            {{ t('mainMenu.continue') }}
+          </button>
+          <button
+            class="menu-item"
+            :data-danger="confirmNew"
+            @click="newGame"
+          >
+            {{ confirmNew ? t('mainMenu.confirmNew') : t('mainMenu.newGame') }}
+          </button>
+          <button
+            class="menu-item"
+            :aria-expanded="panel === 'settings'"
+            @click="toggle('settings')"
+          >
+            {{ t('mainMenu.settings') }}
+          </button>
+          <button
+            class="menu-item"
+            :aria-expanded="panel === 'controls'"
+            @click="toggle('controls')"
+          >
+            {{ t('mainMenu.controls') }}
+          </button>
+          <button
+            v-if="desktop"
+            class="menu-item mt-4"
+            @click="desktop.quit()"
+          >
+            {{ t('mainMenu.quit') }}
+          </button>
+        </nav>
+
+        <!-- Floats beside the list, out of the layout flow, so opening or switching it moves nothing else. -->
+        <Transition
+          enter-from-class="opacity-0"
+          enter-active-class="transition-opacity duration-150"
+          leave-to-class="opacity-0"
+          leave-active-class="transition-opacity duration-100"
+        >
+          <section
+            v-if="panel"
+            :key="panel"
+            class="plate absolute top-0 left-full ml-10 w-90 px-6 py-5"
+          >
+            <h2 class="mb-4 font-display text-3xl leading-none font-semibold">
+              {{ panel === 'settings' ? t('mainMenu.settings') : t('mainMenu.controls') }}
+            </h2>
+            <SettingsPanel v-if="panel === 'settings'" />
+            <ControlsList v-else />
+          </section>
+        </Transition>
+      </div>
+    </div>
+  </div>
+</template>
+
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
@@ -34,119 +105,3 @@ function toggle (next: Exclude<Panel, null>) {
   panel.value = panel.value === next ? null : next;
 }
 </script>
-
-<template>
-  <div class="pointer-events-auto absolute inset-0 z-30 bg-[linear-gradient(90deg,rgba(0,0,0,0.88)_0%,rgba(0,0,0,0.55)_38%,rgba(0,0,0,0)_70%)]">
-    <!-- Pinned to a fixed spot: nothing here depends on what is open, so the menu never shifts. -->
-    <div class="absolute top-[28vh] left-[8vw]">
-      <h1 class="display text-8xl leading-none whitespace-nowrap text-snow drop-shadow-[0_6px_30px_rgba(0,0,0,0.8)]">
-        {{ t('mainMenu.title') }}
-      </h1>
-
-      <div class="relative mt-12 w-72">
-        <nav class="flex flex-col items-start gap-1">
-          <button
-            v-if="canContinue"
-            class="menu-item"
-            @click="game.continueGame()"
-          >
-            {{ t('mainMenu.continue') }}
-          </button>
-          <button
-            class="menu-item"
-            :class="{ danger: confirmNew }"
-            @click="newGame"
-          >
-            {{ confirmNew ? t('mainMenu.confirmNew') : t('mainMenu.newGame') }}
-          </button>
-          <button
-            class="menu-item"
-            :class="{ active: panel === 'settings' }"
-            @click="toggle('settings')"
-          >
-            {{ t('mainMenu.settings') }}
-          </button>
-          <button
-            class="menu-item"
-            :class="{ active: panel === 'controls' }"
-            @click="toggle('controls')"
-          >
-            {{ t('mainMenu.controls') }}
-          </button>
-          <button
-            v-if="desktop"
-            class="menu-item mt-4"
-            @click="desktop.quit()"
-          >
-            {{ t('mainMenu.quit') }}
-          </button>
-        </nav>
-
-        <!-- Floats beside the list, out of the layout flow, so opening or switching it moves nothing else. -->
-        <Transition
-          enter-from-class="opacity-0"
-          enter-active-class="transition-opacity duration-150"
-          leave-to-class="opacity-0"
-          leave-active-class="transition-opacity duration-100"
-        >
-          <section
-            v-if="panel"
-            :key="panel"
-            class="plate absolute top-0 left-full ml-10 w-[360px] px-6 py-5"
-          >
-            <h2 class="display mb-4 text-3xl leading-none">
-              {{ panel === 'settings' ? t('mainMenu.settings') : t('mainMenu.controls') }}
-            </h2>
-            <SettingsPanel v-if="panel === 'settings'" />
-            <ControlsList v-else />
-          </section>
-        </Transition>
-      </div>
-    </div>
-  </div>
-</template>
-
-<style scoped>
-.menu-item {
-  position: relative;
-  padding: 6px 0 6px 24px;
-  font-family: var(--font-hud);
-  font-size: 22px;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgb(242 244 245 / 0.6);
-  white-space: nowrap;
-  cursor: pointer;
-  transition: color 0.12s;
-}
-
-/* A short warm bar, like the lamp's own light, marks the item under the pointer. Its space is always reserved, so
-   it only fades in: the text never moves. */
-.menu-item::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 0;
-  width: 12px;
-  height: 2px;
-  margin-top: -1px;
-  background: var(--color-warm);
-  opacity: 0;
-  transition: opacity 0.12s;
-}
-
-.menu-item:hover,
-.menu-item.active {
-  color: var(--color-snow);
-}
-
-.menu-item:hover::before,
-.menu-item.active::before {
-  opacity: 1;
-}
-
-.menu-item.danger {
-  color: var(--color-danger);
-}
-</style>

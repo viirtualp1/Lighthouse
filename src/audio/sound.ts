@@ -1,10 +1,10 @@
 import type { Effect } from '@/game/state';
 
 interface Ambience {
-  wind: GainNode;
-  sea: GainNode;
-  drone: GainNode;
-  whisper: GainNode;
+  wind: GainNode
+  sea: GainNode
+  drone: GainNode
+  whisper: GainNode
 }
 
 const MUTE_KEY = 'lighthouse.muted';

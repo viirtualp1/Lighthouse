@@ -3,10 +3,10 @@ import type { Graphics, StrokeStyle } from 'pixi.js';
 import type { BuildingId } from '@/game/config';
 
 export interface Window {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
+  x: number
+  y: number
+  w: number
+  h: number
 }
 
 const LINE: StrokeStyle = { width: 1.4, color: PALETTE.white, alpha: 0.85, join: 'round', cap: 'round' };

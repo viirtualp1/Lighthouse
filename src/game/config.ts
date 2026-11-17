@@ -17,16 +17,16 @@ export type Placement = 'land' | 'shore' | 'oil' | 'wreck' | 'fixed';
 export type BeamMode = 'circle' | 'beam' | 'boost' | 'off';
 
 export interface BuildingDef {
-  id: BuildingId;
-  cost: Partial<Record<ResourceId, number>>;
-  maxWorkers: number;
-  placement: Placement;
-  housing?: number;
-  limit?: number;
+  id: BuildingId
+  cost: Partial<Record<ResourceId, number>>
+  maxWorkers: number
+  placement: Placement
+  housing?: number
+  limit?: number
 }
 
 export interface BeamDef {
-  oilPerHour: number;
+  oilPerHour: number
 }
 
 /** One step of the city's ring grid in world pixels; light, Shadow and distances are measured in these. */
@@ -98,14 +98,14 @@ export const RESOURCE_IDS: ResourceId[] = ['oil', 'fish', 'wood', 'iron'];
 export type StageId = 'tower' | 'lens' | 'lantern' | 'greatLight';
 
 export interface RestorationStage {
-  id: StageId;
-  cost: Partial<Record<ResourceId, number>>;
+  id: StageId
+  cost: Partial<Record<ResourceId, number>>
   /** Worker-hours of building once the materials are delivered. */
-  work: number;
+  work: number
   /** How many rings further every light mode reaches once this stage is done. */
-  rings: number;
+  rings: number
   /** Share of the beam's oil the stage saves from then on. */
-  oilSaving?: number;
+  oilSaving?: number
 }
 
 /**
@@ -122,7 +122,7 @@ export const RESTORATION: RestorationStage[] = [
 export type FindKind = 'oil' | 'supplies' | 'survivors' | 'wreck' | 'journal';
 
 /** What lies out in the dark, waiting for the light to reach it. */
-export const FINDS: { kind: FindKind; reward: Partial<Record<ResourceId, number>>; people?: number }[] = [
+export const FINDS: { kind: FindKind, reward: Partial<Record<ResourceId, number>>, people?: number }[] = [
   { kind: 'oil', reward: { oil: 45 } },
   { kind: 'oil', reward: { oil: 35 } },
   { kind: 'supplies', reward: { wood: 40, iron: 15 } },
@@ -211,7 +211,7 @@ export const BUILDINGS: Record<BuildingId, BuildingDef> = {
 export type BuildGroupId = 'home' | 'food' | 'materials' | 'care';
 
 /** The build bar's sections: grouped by what a building is for, so the player looks in one place per need. */
-export const BUILD_GROUPS: { id: BuildGroupId; items: BuildingId[] }[] = [
+export const BUILD_GROUPS: { id: BuildGroupId, items: BuildingId[] }[] = [
   { id: 'home', items: ['hut'] },
   { id: 'food', items: ['dock', 'renderer', 'oilCollector'] },
   { id: 'materials', items: ['driftwood', 'salvage'] },

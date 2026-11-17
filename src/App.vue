@@ -1,3 +1,39 @@
+<template>
+  <div class="relative h-full overflow-hidden">
+    <MapView :key="generation" />
+    <Transition
+      enter-from-class="opacity-0"
+      enter-active-class="transition duration-500"
+      leave-to-class="opacity-0"
+      leave-active-class="transition duration-300"
+    >
+      <MainMenu v-if="game.screen.value === 'menu'" />
+    </Transition>
+    <div
+      v-if="game.screen.value === 'game'"
+      class="pointer-events-none absolute inset-0"
+    >
+      <PhaseBanner />
+      <HudTop />
+      <GoalLine />
+      <HudLeft />
+      <HudAlerts />
+      <LighthouseHud />
+      <BuildBar />
+      <div class="pointer-events-none absolute right-4 bottom-4 flex flex-col items-end gap-2">
+        <RestorationCard />
+        <FindCard />
+        <BuildingCard />
+        <ResourcePanel />
+      </div>
+      <DawnModal />
+      <EndModal />
+      <PauseMenu />
+    </div>
+    <TutorialOverlay v-if="game.screen.value === 'game'" />
+  </div>
+</template>
+
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { playClick, unlockSound } from './audio/sound';
@@ -67,39 +103,3 @@ onBeforeUnmount(() => {
   window.removeEventListener('pointerdown', onPointerDown, true);
 });
 </script>
-
-<template>
-  <div class="relative h-full overflow-hidden">
-    <MapView :key="generation" />
-    <Transition
-      enter-from-class="opacity-0"
-      enter-active-class="transition duration-500"
-      leave-to-class="opacity-0"
-      leave-active-class="transition duration-300"
-    >
-      <MainMenu v-if="game.screen.value === 'menu'" />
-    </Transition>
-    <div
-      v-if="game.screen.value === 'game'"
-      class="pointer-events-none absolute inset-0"
-    >
-      <PhaseBanner />
-      <HudTop />
-      <GoalLine />
-      <HudLeft />
-      <HudAlerts />
-      <LighthouseHud />
-      <BuildBar />
-      <div class="pointer-events-none absolute right-4 bottom-4 flex flex-col items-end gap-2">
-        <RestorationCard />
-        <FindCard />
-        <BuildingCard />
-        <ResourcePanel />
-      </div>
-      <DawnModal />
-      <EndModal />
-      <PauseMenu />
-    </div>
-    <TutorialOverlay v-if="game.screen.value === 'game'" />
-  </div>
-</template>

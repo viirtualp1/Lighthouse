@@ -10,101 +10,101 @@ export type Phase = 'day' | 'dusk' | 'night';
 export type Status = 'playing' | 'won' | 'lost';
 
 export interface Building extends Point {
-  id: number;
-  type: BuildingId;
+  id: number
+  type: BuildingId
   /** Index of the map slot it stands on; -1 for the Lighthouse in the centre. */
-  slot: number;
-  workers: number;
-  progress: number;
+  slot: number
+  workers: number
+  progress: number
 }
 
 /** Text the game produces, kept as a translation key so it follows the chosen language. */
 export interface Message {
-  key: string;
-  params: Record<string, string | number>;
+  key: string
+  params: Record<string, string | number>
 }
 
 export interface Restoration {
   /** Stages finished, 0 to RESTORATION.length. */
-  stage: number;
+  stage: number
   /** Whether the current stage's materials are delivered and building is under way. */
-  started: boolean;
-  progress: number;
-  builders: number;
+  started: boolean
+  progress: number
+  builders: number
 }
 
 export interface Find extends Point {
-  id: number;
-  kind: FindKind;
-  reward: Partial<Record<ResourceId, number>>;
-  people: number;
+  id: number
+  kind: FindKind
+  reward: Partial<Record<ResourceId, number>>
+  people: number
   /** Hours this find has spent in the light at night; it is found once that is enough. */
-  exposure: number;
-  found: boolean;
-  collected: boolean;
+  exposure: number
+  found: boolean
+  collected: boolean
 }
 
 export interface LogEntry extends Message {
-  id: number;
-  day: number;
-  clock: string;
-  tone: 'info' | 'warn' | 'bad' | 'good';
-  at: number;
+  id: number
+  day: number
+  clock: string
+  tone: 'info' | 'warn' | 'bad' | 'good'
+  at: number
 }
 
 export type EffectKind = 'build' | 'demolish' | 'vanish' | 'dusk' | 'night' | 'dawn' | 'oilOut' | 'assign' | 'discover' | 'restore' | 'collect';
 
 /** Something that just happened in the world, for sound and particles to pick up and clear each frame. */
 export interface Effect {
-  kind: EffectKind;
-  x?: number;
-  y?: number;
+  kind: EffectKind
+  x?: number
+  y?: number
 }
 
 export interface DawnReport {
-  day: number;
-  eaten: number;
-  hungry: number;
-  gotSick: number;
-  died: number;
-  recovered: number;
-  vanished: number;
-  deserted: number;
+  day: number
+  eaten: number
+  hungry: number
+  gotSick: number
+  died: number
+  recovered: number
+  vanished: number
+  deserted: number
 }
 
 export interface GameState {
-  rng: Rng;
-  map: GameMap;
-  buildings: Building[];
-  resources: Record<ResourceId, number>;
-  healthy: number;
-  sick: number;
-  day: number;
-  hour: number;
+  rng: Rng
+  map: GameMap
+  buildings: Building[]
+  resources: Record<ResourceId, number>
+  healthy: number
+  sick: number
+  day: number
+  hour: number
   /** Game hours since the start, for fading log entries and other timing. */
-  elapsed: number;
-  phase: Phase;
-  fear: number;
-  mode: BeamMode;
-  beamAngle: number;
-  restoration: Restoration;
-  finds: Find[];
-  journalsRead: number;
+  elapsed: number
+  phase: Phase
+  fear: number
+  mode: BeamMode
+  beamAngle: number
+  restoration: Restoration
+  finds: Find[]
+  journalsRead: number
   /** Light level and Shadow cover per map slot, indexed like `map.slots`. */
-  light: Uint8Array;
-  shadow: Float32Array;
-  shadowFront: number;
-  oilOutWarned: boolean;
-  vanishedTonight: number;
-  status: Status;
-  endReason: Message | null;
-  dawnReport: DawnReport | null;
-  pendingReport: DawnReport | null;
-  effects: Effect[];
-  log: LogEntry[];
-  speed: number;
-  revision: number;
-  nextId: number;
+  light: Uint8Array
+  shadow: Float32Array
+  shadowFront: number
+  oilOutWarned: boolean
+  vanishedTonight: number
+  status: Status
+  endReason: Message | null
+  dawnReport: DawnReport | null
+  pendingReport: DawnReport | null
+  effects: Effect[]
+  log: LogEntry[]
+  speed: number
+  revision: number
+  nextId: number
 }
 
 export function createState (seed = Date.now()): GameState {
@@ -179,8 +179,7 @@ export function createState (seed = Date.now()): GameState {
 function placeFinds (map: GameMap, rng: Rng) {
   const finds: Find[] = [];
   const { x: cx, y: cy } = map.lighthouse;
-  const clear = (x: number, y: number) =>
-    !isSea(map, x, y + 30)
+  const clear = (x: number, y: number) => !isSea(map, x, y + 30)
     && x > 50 && y > 50 && x < map.width - 50 && y < map.height - 50
     && !map.rocks.some(r => Math.hypot(r.x - x, r.y - y) < r.r + 40)
     && !map.slots.some(s => Math.hypot(s.x - x, s.y - y) < 50)

@@ -13,7 +13,9 @@
     "desktop:dev": "tsc -p tsconfig.electron.json && LIGHTHOUSE_DEV_URL=http://localhost:5173 electron .",
     "desktop:package": "bun run desktop:build && electron-builder --dir",
     "desktop:dist": "bun run desktop:build && electron-builder",
-    "art": "bun scripts/art.ts"
+    "art": "bun scripts/art.ts",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "dependencies": {
     "@fontsource/cormorant-garamond": "^5.3.0",
@@ -25,15 +27,23 @@
     "vue-i18n": "^11.4.18"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@resvg/resvg-js": "^2.6.2",
+    "@stylistic/eslint-plugin": "^5.10.0",
     "@tailwindcss/vite": "^4.3.5",
     "@types/node": "^26.6.6",
     "@vitejs/plugin-vue": "^6.0.10",
+    "@vue/eslint-config-typescript": "^14.9.0",
     "@vue/tsconfig": "^0.9.1",
     "electron": "^45.2.3",
     "electron-builder": "^26.18.0",
+    "eslint": "^10.15.0",
+    "eslint-plugin-tailwindcss": "^4.4.0",
+    "eslint-plugin-vue": "^10.12.1",
+    "globals": "^17.14.0",
     "tailwindcss": "^4.3.5",
     "typescript": "^6",
+    "typescript-eslint": "^8.73.0",
     "vite": "^8.3.6",
     "vitest": "^5.1.0",
     "vue-tsc": "^3.3.14"

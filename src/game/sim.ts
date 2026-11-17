@@ -721,8 +721,8 @@ export function rates (state: GameState) {
 
 export interface RateSource {
   /** A building type, or 'beam' / 'lanterns' for the light's own burn. */
-  source: BuildingId | 'beam' | 'lanterns';
-  amount: number;
+  source: BuildingId | 'beam' | 'lanterns'
+  amount: number
 }
 
 /** Where each resource's hourly change comes from, grouped by building type, for the supplies tooltip. */

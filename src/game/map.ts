@@ -4,35 +4,35 @@ import { createRng } from './rng';
 export type SlotKind = 'ring' | 'oil' | 'wreck';
 
 export interface Point {
-  x: number;
-  y: number;
+  x: number
+  y: number
 }
 
 export interface Slot extends Point {
-  id: number;
-  ring: number;
-  kind: SlotKind;
-  shore: boolean;
-  wreckIron: number;
+  id: number
+  ring: number
+  kind: SlotKind
+  shore: boolean
+  wreckIron: number
   /** Distance to the map's edge in UNITs: the Shadow creeps in along this. */
-  edgeDistance: number;
+  edgeDistance: number
 }
 
 export interface Rock extends Point {
-  r: number;
-  seed: number;
+  r: number
+  seed: number
 }
 
 export interface GameMap {
-  width: number;
-  height: number;
-  lighthouse: Point;
+  width: number
+  height: number
+  lighthouse: Point
   /** Coast height sampled every COAST_STEP pixels from the left edge; below it is the sea. */
-  coast: number[];
-  slots: Slot[];
-  rocks: Rock[];
+  coast: number[]
+  slots: Slot[]
+  rocks: Rock[]
   /** The deepest any slot sits from the edge: once the Shadow's front passes it, it has nowhere further to go. */
-  maxEdge: number;
+  maxEdge: number
 }
 
 export const COAST_STEP = 20;

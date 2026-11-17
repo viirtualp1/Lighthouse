@@ -4,15 +4,15 @@ import type { GameState } from './state';
 
 /** Everything the light depends on, in world pixels; the darkness shader receives the same numbers. */
 export interface LightParams {
-  origin: Point;
-  lit: number;
-  dim: number;
-  beamAngle: number;
-  beamHalfArc: number;
-  beamLength: number;
-  lanterns: Point[];
-  lanternLit: number;
-  lanternDim: number;
+  origin: Point
+  lit: number
+  dim: number
+  beamAngle: number
+  beamHalfArc: number
+  beamLength: number
+  lanterns: Point[]
+  lanternLit: number
+  lanternDim: number
 }
 
 export const LIT = 2;

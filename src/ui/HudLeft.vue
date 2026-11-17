@@ -1,3 +1,90 @@
+<template>
+  <aside class="pointer-events-none absolute top-4 left-4 flex flex-col items-start gap-3">
+    <section
+      class="plate pointer-events-auto relative flex w-72 items-center gap-3 px-4 pt-3 pb-2"
+      data-tour="fear"
+      :title="t('fear.tooltip')"
+    >
+      <svg
+        width="104"
+        height="58"
+        viewBox="-52 -52 104 58"
+      >
+        <path
+          :d="arc(0, 1)"
+          fill="none"
+          stroke="rgba(242,244,245,0.12)"
+          stroke-width="7"
+        />
+        <path
+          :d="fear.arc"
+          fill="none"
+          :stroke="fear.color"
+          stroke-width="7"
+          class="transition-all duration-500"
+        />
+        <line
+          v-for="(mark, i) in fear.ticks"
+          :key="i"
+          v-bind="mark"
+          :stroke="i ? '#e0574a' : 'rgba(242,244,245,0.6)'"
+          stroke-width="1.5"
+        />
+        <text
+          y="2"
+          text-anchor="middle"
+          class="font-hud font-medium lining-nums tabular-nums"
+          font-size="22"
+          fill="#f2f4f5"
+        >{{ Math.floor(fear.value) }}</text>
+      </svg>
+      <div>
+        <div class="font-hud text-[11px] font-medium tracking-[0.12em] text-mist uppercase">
+          {{ t('fear.title') }}
+        </div>
+        <div
+          class="font-display text-xl leading-tight font-semibold"
+          :class="fear.value >= GAME.fearDesertAt ? 'text-danger' : 'text-snow'"
+        >
+          {{ fear.state }}
+        </div>
+        <div
+          class="mt-0.5 flex h-4 items-center gap-1 font-hud text-[12px] font-medium lining-nums tabular-nums"
+          :class="[fear.rate > 0 ? 'text-danger' : 'text-good', Math.abs(fear.rate) < 0.05 ? 'invisible' : '']"
+        >
+          <TrendingUp
+            v-if="fear.rate > 0"
+            :size="13"
+          />
+          <TrendingDown
+            v-else
+            :size="13"
+          />
+          {{ fear.rate > 0 ? t('fear.rising', { n: fear.rate.toFixed(1) }) : t('fear.falling', { n: Math.abs(fear.rate).toFixed(1) }) }}
+        </div>
+      </div>
+    </section>
+
+    <TransitionGroup
+      tag="ul"
+      class="flex flex-col gap-1"
+      enter-from-class="opacity-0 -translate-x-3"
+      enter-active-class="transition duration-300"
+      leave-active-class="hidden"
+    >
+      <li
+        v-for="entry in feed"
+        :key="entry.id"
+        class="rounded-sm bg-black/55 px-2.5 py-1 text-[13px] leading-snug whitespace-nowrap backdrop-blur-sm"
+        :style="{ opacity: entry.opacity }"
+      >
+        <span class="mr-1.5 font-hud text-[11px] font-medium text-fog lining-nums tabular-nums">{{ entry.clock }}</span>
+        <span :class="TONES[entry.tone]">{{ logText(entry) }}</span>
+      </li>
+    </TransitionGroup>
+  </aside>
+</template>
+
 <script setup lang="ts">
 import { computed } from 'vue';
 import { TrendingDown, TrendingUp } from '@lucide/vue';
@@ -89,90 +176,3 @@ function tick (t: number) {
   return { x1: a.x, y1: a.y, x2: b.x, y2: b.y };
 }
 </script>
-
-<template>
-  <aside class="pointer-events-none absolute top-4 left-4 flex flex-col items-start gap-3">
-    <section
-      class="plate pointer-events-auto flex w-72 items-center gap-3 px-4 pt-3 pb-2"
-      data-tour="fear"
-      :title="t('fear.tooltip')"
-    >
-      <svg
-        width="104"
-        height="58"
-        viewBox="-52 -52 104 58"
-      >
-        <path
-          :d="arc(0, 1)"
-          fill="none"
-          stroke="rgba(242,244,245,0.12)"
-          stroke-width="7"
-        />
-        <path
-          :d="fear.arc"
-          fill="none"
-          :stroke="fear.color"
-          stroke-width="7"
-          class="transition-all duration-500"
-        />
-        <line
-          v-for="(t, i) in fear.ticks"
-          :key="i"
-          v-bind="t"
-          :stroke="i ? '#e0574a' : 'rgba(242,244,245,0.6)'"
-          stroke-width="1.5"
-        />
-        <text
-          y="2"
-          text-anchor="middle"
-          class="num"
-          font-size="22"
-          fill="#f2f4f5"
-        >{{ Math.floor(fear.value) }}</text>
-      </svg>
-      <div>
-        <div class="label">
-          {{ t('fear.title') }}
-        </div>
-        <div
-          class="display text-xl leading-tight"
-          :class="fear.value >= GAME.fearDesertAt ? 'text-danger' : 'text-snow'"
-        >
-          {{ fear.state }}
-        </div>
-        <div
-          class="num mt-0.5 flex h-4 items-center gap-1 text-[12px]"
-          :class="[fear.rate > 0 ? 'text-danger' : 'text-good', Math.abs(fear.rate) < 0.05 ? 'invisible' : '']"
-        >
-          <TrendingUp
-            v-if="fear.rate > 0"
-            :size="13"
-          />
-          <TrendingDown
-            v-else
-            :size="13"
-          />
-          {{ fear.rate > 0 ? t('fear.rising', { n: fear.rate.toFixed(1) }) : t('fear.falling', { n: Math.abs(fear.rate).toFixed(1) }) }}
-        </div>
-      </div>
-    </section>
-
-    <TransitionGroup
-      tag="ul"
-      class="flex flex-col gap-1"
-      enter-from-class="opacity-0 -translate-x-3"
-      enter-active-class="transition duration-300"
-      leave-active-class="hidden"
-    >
-      <li
-        v-for="entry in feed"
-        :key="entry.id"
-        class="rounded-sm bg-black/55 px-2.5 py-1 text-[13px] leading-snug whitespace-nowrap backdrop-blur-sm"
-        :style="{ opacity: entry.opacity }"
-      >
-        <span class="num mr-1.5 text-[11px] text-fog">{{ entry.clock }}</span>
-        <span :class="TONES[entry.tone]">{{ logText(entry) }}</span>
-      </li>
-    </TransitionGroup>
-  </aside>
-</template>

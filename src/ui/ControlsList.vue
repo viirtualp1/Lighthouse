@@ -1,3 +1,16 @@
+<template>
+  <ul class="space-y-2">
+    <li
+      v-for="[key, action] in CONTROLS"
+      :key="action"
+      class="flex items-center justify-between gap-4 border-b border-snow/10 pb-2 whitespace-nowrap"
+    >
+      <span class="text-[14px] text-mist">{{ t(action) }}</span>
+      <span class="rounded-[2px] border border-snow/20 px-2 py-0.5 font-hud text-[13px] font-medium lining-nums tabular-nums">{{ keyName(key) }}</span>
+    </li>
+  </ul>
+</template>
+
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
 
@@ -17,16 +30,3 @@ function keyName (key: string) {
   return te(key) ? t(key) : key;
 }
 </script>
-
-<template>
-  <ul class="space-y-2">
-    <li
-      v-for="[key, action] in CONTROLS"
-      :key="action"
-      class="flex items-center justify-between gap-4 border-b border-snow/10 pb-2 whitespace-nowrap"
-    >
-      <span class="text-[14px] text-mist">{{ t(action) }}</span>
-      <span class="num rounded-[2px] border border-snow/20 px-2 py-0.5 text-[13px]">{{ keyName(key) }}</span>
-    </li>
-  </ul>
-</template>
